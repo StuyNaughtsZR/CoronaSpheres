@@ -62,8 +62,8 @@ float getDist(float start[3] , float end[3]){
 }
 
 void checkForPOI() {
-    if (game.alignLine() == true) {
-        game.getPOILoc(poiLOC , poiID);
+    game.getPOILoc(poiLOC , poiID);
+    if (game.alignLine(poiID) == true) {
         game.takePic(poiID);
     }
 }
