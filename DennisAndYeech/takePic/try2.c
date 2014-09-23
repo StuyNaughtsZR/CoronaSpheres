@@ -2,11 +2,14 @@
 
 ZRState me;
 int state, POIID;
-float POI[3],test0[3],test1[3];
+float POI[3],test0[3],test1[3],breakingPos[3],origin[3];
 
 void init() {
 
 	state = 0;
+	for (int i = 0; i < 3; i++) {
+		origin[i] = 0;
+	}
 
 }
 
@@ -33,8 +36,35 @@ void loop() {
 			}
 			
 			DEBUG(("POI Coors = %f,%f,%f\n",POI[0],POI[1],POI[2]));
+
+			for (int i = 0; i < 3; i++) {
+				breakingPos[i] = POI[i] * 1.75;
+			}
+
 		case 1:
-			
+			if(api.getTime() % 60 == 0) state = 0;
+			else if (velocity(me) < 0.001) state = 2;
+			else {
+				api.setPositionTarget(breakingPos);
+			}
+		case 2:
+			if(api.getTime() % 60 == 0) state = 0;
+			else {
+				if (game.alignLine(POIID)) {
+					DEBUG(("The game align function worked!\n"));
+					game.takePic(POIID);
+				}
+				else {
+					api.setAttitudeTarget(origin); // <- just point to the center
+					DEBUG(("The align function didn't work!\n"));
+				}
+				
+				if (game.getMemoryFilled() > 0) {
+					DEBUG(("A picture was taken! \n"));
+					state = 3;
+				}
+				
+			}
 	}
 }
 
