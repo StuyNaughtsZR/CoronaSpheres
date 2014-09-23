@@ -22,14 +22,14 @@ void loop() {
 			game.getPOILoc(test0,0);
 			game.getPOILoc(test1,1);
 			if (distance(me,test0) <= distance(me,test1)) {
-			    POIID = 0;
-		    for (int i = 0; i < 3; i++) POI[i] = test0[i];
-	        state = 1;
+				POIID = 0;
+				for (int i = 0; i < 3; i++) POI[i] = test0[i];
+	        		state = 1;
 			}
 			else {
-			    POIID = 1;
-	    		for (int i = 0; i < 3; i++) POI[i] = test1[i];
-	       		state = 1;
+				POIID = 1;
+	    			for (int i = 0; i < 3; i++) POI[i] = test1[i];
+	       			state = 1;
 			}
 			
 			DEBUG(("POI Coors = %f,%f,%f\n",POI[0],POI[1],POI[2]));
@@ -42,10 +42,9 @@ void loop() {
 		case 1:
 			if(api.getTime() % 60 == 0) state = 0;
 			else if (velocity(me) < 0.001) state = 2;
-			else {
-				api.setPositionTarget(breakingPos);
-			}
+			else api.setPositionTarget(breakingPos);
 			break;
+
 		case 2:
 			if(api.getTime() % 60 == 0) state = 0;
 			else {
