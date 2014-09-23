@@ -2,14 +2,11 @@
 
 ZRState me;
 int state, POIID;
-float POI[3],test0[3],test1[3],breakingPos[3],origin[3];
+float POI[3],test0[3],test1[3],breakingPos[3];
 
 void init() {
 
 	state = 0;
-	for (int i = 0; i < 3; i++) {
-		origin[i] = 0;
-	}
 
 }
 
@@ -55,7 +52,7 @@ void loop() {
 					game.takePic(POIID);
 				}
 				else {
-					api.setAttitudeTarget(origin); // <- just point to the center
+					api.setAttitudeTarget(POI); // <- just point to the center
 					DEBUG(("The align function didn't work!\n"));
 				}
 				
