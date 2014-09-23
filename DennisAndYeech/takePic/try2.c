@@ -16,26 +16,26 @@ void loop() {
 
 	api.getMyZRState(me);
 
-	switch (state == 0) {
-		
-		// POI Selection!
+	switch (state) {
 
-		//float test0[3];
-		game.getPOILoc(test0,0);
-		//float test1[3];
-		game.getPOILoc(test1,1);
-		if (distance(me,test0) <= distance(me,test1)) {
-		    POIID = 0;
+		case  0:
+			game.getPOILoc(test0,0);
+			game.getPOILoc(test1,1);
+			if (distance(me,test0) <= distance(me,test1)) {
+			    POIID = 0;
 		    for (int i = 0; i < 3; i++) POI[i] = test0[i];
 	        state = 1;
-		}
-		else {
-		    POIID = 1;
-	    	for (int i = 0; i < 3; i++) POI[i] = test1[i];
-	        state = 1;
-		}
+			}
+			else {
+			    POIID = 1;
+	    		for (int i = 0; i < 3; i++) POI[i] = test1[i];
+	       		state = 1;
+			}
+			
+			DEBUG(("POI Coors = %f,%f,%f\n",POI[0],POI[1],POI[2]));
+		case 1:
+			
 	}
-	if 
 }
 
 float distance(float p1[], float p2[]){

@@ -37,7 +37,7 @@ void loop(){
 		    for (int i = 0; i < 3; i++) POI[i] = test1[i];
 	        state = 1;
 		}
-		for(int i = 0; i < 3; i++) brakingPos[i] = 2.25*POI[i]; // Smart...
+		for(int i = 0; i < 3; i++) brakingPos[i] = 1.25*POI[i]; // Smart...
 		DEBUG(("POIcoors = %f,%f,%f\n",POI[0],POI[1],POI[2]));
 	}
 	if(state == 1) { // move to brakingPos
@@ -54,7 +54,7 @@ void loop(){
 	    else {
 	        if (game.alignLine(POIID)) {
 	            DEBUG(("The damn align function worked\n"));
-	            state = 3; // Maybe I am being stupid... But if this was carried out, the game is no longer at state 2, which means that it won't take picture.
+	            // state = 3; // Maybe I am being stupid... But if this was carried out, the game is no longer at state 2, which means that it won't take picture.
 	        }
 	        else {
 	            api.setAttitudeTarget(POI);
