@@ -18,7 +18,7 @@ void loop() {
 
 	switch (state) {
 
-		case  0:
+		case 0:
 			game.getPOILoc(test0,0);
 			game.getPOILoc(test1,1);
 			if (distance(me,test0) <= distance(me,test1)) {
@@ -37,6 +37,7 @@ void loop() {
 			for (int i = 0; i < 3; i++) {
 				breakingPos[i] = POI[i] * 1.75;
 			}
+			break;
 
 		case 1:
 			if(api.getTime() % 60 == 0) state = 0;
@@ -44,6 +45,7 @@ void loop() {
 			else {
 				api.setPositionTarget(breakingPos);
 			}
+			break;
 		case 2:
 			if(api.getTime() % 60 == 0) state = 0;
 			else {
@@ -62,6 +64,7 @@ void loop() {
 				}
 				
 			}
+			break;
 	}
 }
 
