@@ -48,7 +48,7 @@ void loop() {
 		case 2:
 			if(api.getTime() % 60 == 0) state = 0;
 			else {
-				if (game.alignLine(POIID)) {
+				if (me[11] < 0.001) {
 					DEBUG(("The game align function worked!\n"));
 					game.takePic(POIID);
 				}
@@ -64,6 +64,8 @@ void loop() {
 				
 			}
 			break;
+		case 3:
+			game.uploadPic();
 	}
 }
 
@@ -82,4 +84,3 @@ float velocity(float p1[]){
 	}
 	return sqrtf(d);
 }
-
