@@ -51,6 +51,7 @@ void loop() {
 				if (me[11] < 0.001) {
 					DEBUG(("The game align function worked!\n"));
 					game.takePic(POIID);
+					game.takePic(POIID);
 				}
 				else {
 					api.setAttitudeTarget(POI); // <- just point to the center
