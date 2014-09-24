@@ -35,7 +35,7 @@ void loop() {
 			DEBUG(("POI Coors = %f,%f,%f\n",POI[0],POI[1],POI[2]));
 
 			for (int i = 0; i < 3; i++) {
-				breakingPos[i] = POI[i] * 1.15;
+				breakingPos[i] = POI[i] * 1.7;//1.5625;
 			}
 			break;
 
@@ -48,16 +48,15 @@ void loop() {
 		case 2:
 			if(api.getTime() % 60 == 0) state = 0;
 			else {
-				if (true) {
+				if (alignLine(POIID)) {
 					DEBUG(("The game align function worked!\n"));
 					game.takePic(POIID);
-					game.takePic(POIID);
+				    game.takePic(POIID);
 				}
 				else {
 					api.setAttitudeTarget(POI); // <- just point to the center
 					DEBUG(("The align function didn't work!\n"));
 				}
-				
 				if (game.getMemoryFilled() > 0) {
 					DEBUG(("A picture was taken! \n"));
 					state = 3;
@@ -84,4 +83,14 @@ float velocity(float p1[]){
 		d += p1[i]*p1[i];
 	}
 	return sqrtf(d);
+}
+
+float alignLine(int POIID){
+    float vecDiff[3], POILoc[3];
+    float foo[] = {me[0],me[1],me[2]};
+    game.getPOILoc(POILoc,POIID);
+    mathVecSubtract(vecDiff, POILoc, foo, 3);
+    mathVecNormalize(vecDiff,3);
+    float goo[] = {me[6], me[7], me[8]};
+    return mathVecInner(vecDiff, goo, 3) < cosf(0.05) ;
 }
