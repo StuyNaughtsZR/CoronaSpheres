@@ -35,7 +35,7 @@ void loop() {
 			DEBUG(("POI Coors = %f,%f,%f\n",POI[0],POI[1],POI[2]));
 
 			for (int i = 0; i < 3; i++) {
-				breakingPos[i] = POI[i] * 1.7;//1.5625;
+				breakingPos[i] = POI[i] * 1.5625;
 			}
 			break;
 
