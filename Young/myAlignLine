@@ -1,0 +1,16 @@
+bool myAlignLine(int POIid){
+    ZRState me;
+    float dot;
+    float origin[3], vectorBetweenSP[3], vectorBetweenOP[3];
+    origin[0] = 0;
+    origin[1] = 0;
+    origin[2] = 0;
+    api.getMyZRState(me);
+    game.getPOILoc(pic1, POIid);
+    mathVecSubtract(vectorBetweenSP,me,pic1,3);
+    mathVecNormalize(vectorBetweenSP,3);
+    mathVecSubtract(vectorBetweenOP,pic1,origin,3);
+    mathVecNormalize(vectorBetweenOP,3);
+    dot = mathVecInner(vectorBetweenSP, vectorBetweenOP, 3);
+    return dot < cosf(0.4);
+}
