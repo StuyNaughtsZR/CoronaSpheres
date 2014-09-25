@@ -88,9 +88,13 @@ float velocity(float p1[]){
 float alignLine(int POIID){
     float vecDiff[3], POILoc[3];
     float foo[] = {me[0],me[1],me[2]};
+	float magnitude;
     game.getPOILoc(POILoc,POIID);
     mathVecSubtract(vecDiff, POILoc, foo, 3);
-    mathVecNormalize(vecDiff,3);
+    magnitude = mathVecMagnitude(vecDiff,3);
     float goo[] = {me[6], me[7], me[8]};
+	for (int i = 0; i < 3; i ++) {
+		vecDiff[i] = vecDiff[i] / magnitude ;
+	}
     return mathVecInner(vecDiff, goo, 3) < cosf(0.05) ;
 }
