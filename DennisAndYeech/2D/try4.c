@@ -57,7 +57,7 @@ void loop() {
 			DEBUG(("POI Coors = %f,%f,%f\n",POI[0],POI[1],POI[2]));
 
 			for (int i = 0; i < 3; i++) {
-				breakingPos[i] = POI[i] * 2.0; //1.5625; <- let's try the outer zone
+				breakingPos[i] = POI[i] * 2.5; //1.5625; <- let's try the outer zone
 			}
 			break;
 
