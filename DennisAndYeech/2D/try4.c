@@ -69,7 +69,7 @@ void loop() {
 			picNum = game.getMemoryFilled();
 
 			if (picNum > 0) {
-				DEBUG(("%d pictures have been taken"));
+				DEBUG(("%d pictures have been taken", picNum));
 				uploadCalc(uploadPos,me);
 				state = 3;
 			}
