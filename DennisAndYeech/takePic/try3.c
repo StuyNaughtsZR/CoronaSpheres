@@ -92,9 +92,9 @@ float alignLine(int POIID){
     game.getPOILoc(POILoc,POIID);
     mathVecSubtract(vecDiff, POILoc, foo, 3);
     magnitude = mathVecMagnitude(vecDiff,3);
-	for (int i ; i < 3; i++) {
+	for (int i = 0 ; i < 3; i++) {
 		vecDiff[i] = vecDiff[i] / magnitude ;
 	}
     float goo[] = {me[6], me[7], me[8]};
-    return mathVecInner(vecDiff, goo, 3) > cosf(0.05) ;
+    return fabsf(mathVecInner(vecDiff, goo, 3)) > fabsf(cosf(0.8)) ;
 }
