@@ -87,14 +87,16 @@ float velocity(float p1[]){
 
 float alignLine(int POIID){
     float vecDiff[3], POILoc[3];
-    float foo[] = {me[0],me[1],me[2]};
+    float SpherePos[] = {me[0],me[1],me[2]};
 	float magnitude;
     game.getPOILoc(POILoc,POIID);
-    mathVecSubtract(vecDiff, POILoc, foo, 3);
+    mathVecSubtract(vecDiff, POILoc, SpherePos, 3); // vecDiff is the "correct" facing of the sphere
     magnitude = mathVecMagnitude(vecDiff,3);
-	for (int i = 0 ; i < 3; i++) {
+	for (int i = 0 ; i < 3; i++) { // Converts vecDiff into unit vector
 		vecDiff[i] = vecDiff[i] / magnitude ;
 	}
-    float goo[] = {me[6], me[7], me[8]};
-    return fabsf(mathVecInner(vecDiff, goo, 3)) > fabsf(cosf(0.8)) ;
+    float SphereAttitude[] = {me[6], me[7], me[8]};
+    return mathVecInner(vecDiff, SphereAttitude, 3) > cosf(0.4) ; // smaller angles have higher cosines
+	// returns if the angle between the actual and the correct facings of the sphere is less than the
+	// accepted value.
 }
