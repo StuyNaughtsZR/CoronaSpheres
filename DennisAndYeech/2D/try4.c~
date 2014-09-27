@@ -1,7 +1,7 @@
 //Yeech + Dennis = EPIC SWAG
 
 ZRState me;
-int state, POIID, picNum;
+int state, POIID, picNum, solarFlareBegin, solarFlareEnd;
 float POI[3],test0[3],test1[3],breakingPos[3],facing[3],uploadPos[3];
 
 void init() {
@@ -17,6 +17,21 @@ void loop() {
 	api.getMyZRState(me);
 
 	if(api.getTime() % 60 == 0) state = 0; // "CODE SIZE MATTERS" -- Dennis
+	
+	picNum = game.getMemoryFilled();
+
+	// Solar Storm Evasion
+
+	solarFlareBegin = api.getTime() + game.getNextFlare();
+	solarFlareEnd = solarFlareBegin + 3;
+	if (api.getTime() == solarFlareBegin) {
+		game.turnOff();
+	}
+
+	if (api.getTime() == solarFlareEnd) {
+		game.turnOn();
+		if (state == 3) state = 0;
+	}
 
 	switch (state) {
 
@@ -37,7 +52,7 @@ void loop() {
 			DEBUG(("POI Coors = %f,%f,%f\n",POI[0],POI[1],POI[2]));
 
 			for (int i = 0; i < 3; i++) {
-				breakingPos[i] = POI[i] * 1.5625;
+				breakingPos[i] = POI[i] * 2.0; //1.5625; <- let's try the outer zone
 			}
 			break;
 
@@ -65,21 +80,18 @@ void loop() {
 			game.takePic(POIID); // Old school way of spamming
 			game.takePic(POIID);
 
-
-			picNum = game.getMemoryFilled();
-
 			if (picNum > 0) {
-				DEBUG(("%d pictures have been taken"));
+				DEBUG(("%d pictures have been taken", picNum));
 				uploadCalc(uploadPos,me);
+				api.setPositionTarget(uploadPos);
 				state = 3;
 			}
 
 			break;
 
-		case 3:
-			if (velocity(me) < 0.01) {
+		case 3: // uploading and rebooting, works
+			if (velocity(me) < 0.01 && distance(me,uploadPos) < 0.05) {
 				game.uploadPic();
-				
 				state = 0;
 			}
 			else {
@@ -107,9 +119,9 @@ float velocity(float p1[]){
 	return sqrtf(d);
 }
 
-void uploadCalc(float uploadPos[], me[]){
+void uploadCalc(float uploadPos[], float me[]){
 	mathVecNormalize(me,3);
 	for (int i = 0; i < 3; i++) {
-		uploadPos[i] = me[i] * 0.5;
+		uploadPos[i] = me[i] * 0.6;
 	}
 }

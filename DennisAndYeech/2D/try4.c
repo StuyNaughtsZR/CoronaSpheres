@@ -1,8 +1,8 @@
 //Yeech + Dennis = EPIC SWAG
 
 ZRState me;
-int state, POIID, picNum;
-float POI[3],test0[3],test1[3],breakingPos[3],facing[3],uploadPos[3];
+int state, POIID, picNum; //, solarFlareBegin, solarFlareEnd;
+float POI[3],test0[3],test1[3],breakingPos[3],facing[3],uploadPos[3]; //, temp[3];
 
 void init() {
 
@@ -17,6 +17,26 @@ void loop() {
 	api.getMyZRState(me);
 
 	if(api.getTime() % 60 == 0) state = 0; // "CODE SIZE MATTERS" -- Dennis
+	
+	picNum = game.getMemoryFilled();
+
+	// Solar Storm Evasion -- Best just to ignore the flares.
+	
+	//for (int i = 0; i < 3; i++) {
+	//    temp[i] = me[i];
+	//}
+
+	//solarFlareBegin = api.getTime() + game.getNextFlare();
+	//solarFlareEnd = solarFlareBegin + 3;
+	//if (api.getTime() == (solarFlareBegin - 2)) {
+	//	api.setPositionTarget(temp);
+	//	game.turnOff();
+	//}
+
+	if (api.getTime() == solarFlareEnd) {
+		game.turnOn();
+		state = 0;
+	}
 
 	switch (state) {
 
@@ -37,7 +57,7 @@ void loop() {
 			DEBUG(("POI Coors = %f,%f,%f\n",POI[0],POI[1],POI[2]));
 
 			for (int i = 0; i < 3; i++) {
-				breakingPos[i] = POI[i] * 1.5625;
+				breakingPos[i] = POI[i] * 2.0; //1.5625; <- let's try the outer zone
 			}
 			break;
 
@@ -65,22 +85,19 @@ void loop() {
 			game.takePic(POIID); // Old school way of spamming
 			game.takePic(POIID);
 
-
-			picNum = game.getMemoryFilled();
-
 			if (picNum > 0) {
 				DEBUG(("%d pictures have been taken", picNum));
 				uploadCalc(uploadPos,me);
+				api.setPositionTarget(uploadPos);
 				state = 3;
 			}
 
 			break;
 
-		case 3:
-			if (velocity(me) < 0.01) {
+		case 3: // uploading and rebooting, works
+		    if (picNum == 0) state = 0;
+			else if (velocity(me) < 0.01 && distance(me,uploadPos) < 0.05) {
 				game.uploadPic();
-				
-				state = 0;
 			}
 			else {
 				api.setPositionTarget(uploadPos);
@@ -110,6 +127,6 @@ float velocity(float p1[]){
 void uploadCalc(float uploadPos[], float me[]){
 	mathVecNormalize(me,3);
 	for (int i = 0; i < 3; i++) {
-		uploadPos[i] = me[i] * 0.5;
+		uploadPos[i] = me[i] * 0.6; // Can't go lower than this
 	}
 }
