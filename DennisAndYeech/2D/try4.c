@@ -2,7 +2,7 @@
 
 ZRState me;
 int state, POIID, picNum;
-float POI[3],test0[3],test1[3],breakingPos[3],facing[3];
+float POI[3],test0[3],test1[3],breakingPos[3],facing[3],uploadPos[3];
 
 void init() {
 
@@ -59,17 +59,35 @@ void loop() {
 			api.setAttitudeTarget(facing);
 
 			game.takePic(POIID);
+			game.takePic(POIID); // Old school way of spamming
+			game.takePic(POIID);
+			game.takePic(POIID);
+			game.takePic(POIID); // Old school way of spamming
+			game.takePic(POIID);
+
 
 			picNum = game.getMemoryFilled();
 
 			if (picNum > 0) {
 				DEBUG(("%d pictures have been taken"));
+				uploadCalc(uploadPos,me);
 				state = 3;
 			}
 
 			break;
+
 		case 3:
-			game.uploadPic();
+			if (velocity(me) < 0.01) {
+				game.uploadPic();
+				
+				state = 0;
+			}
+			else {
+				api.setPositionTarget(uploadPos);
+			}
+
+			break;
+			
 	}
 }
 
@@ -87,4 +105,11 @@ float velocity(float p1[]){
 		d += p1[i]*p1[i];
 	}
 	return sqrtf(d);
+}
+
+void uploadCalc(float uploadPos[], float me[]){
+	mathVecNormalize(me,3);
+	for (int i = 0; i < 3; i++) {
+		uploadPos[i] = me[i] * 0.5;
+	}
 }

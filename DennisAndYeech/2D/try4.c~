@@ -2,7 +2,7 @@
 
 ZRState me;
 int state, POIID, picNum;
-float POI[3],test0[3],test1[3],breakingPos[3],facing[3];
+float POI[3],test0[3],test1[3],breakingPos[3],facing[3],uploadPos[3];
 
 void init() {
 
@@ -44,34 +44,50 @@ void loop() {
 		case 1: // "Borrowed" from Young + some personal refinement
 			if (velocity(me) < 0.001) state = 2;
 			else {
-				mathVecSubtract(facing,target,me,3);
+				mathVecSubtract(facing,POI,me,3);
 				mathVecNormalize(facing,3);
-				api.setPositionTarget(brakingPos);
+				api.setPositionTarget(breakingPos);
 				api.setAttitudeTarget(facing);
 			}
 			break;
 
 		case 2: // Legacy Code to me
-			api.setPositionTarget(brakingPos);
-			mathVecSubtract(facing,target,me,3);
+			api.setPositionTarget(breakingPos);
+			
+			mathVecSubtract(facing,POI,me,3);
 			mathVecNormalize(facing,3);
 			api.setAttitudeTarget(facing);
 
-			game.takePic(POI);
+			game.takePic(POIID);
+			game.takePic(POIID); // Old school way of spamming
+			game.takePic(POIID);
+			game.takePic(POIID);
+			game.takePic(POIID); // Old school way of spamming
+			game.takePic(POIID);
+
 
 			picNum = game.getMemoryFilled();
 
 			if (picNum > 0) {
-				DEBUG(("%d pictures have been taken"))
-			}
-			
-			else if (picNum == 2) {
+				DEBUG(("%d pictures have been taken"));
+				uploadCalc(uploadPos,me);
 				state = 3;
 			}
 
 			break;
+
 		case 3:
-			game.uploadPic();
+			if (velocity(me) < 0.01) {
+				game.uploadPic();
+				
+				state = 0;
+			}
+			else {
+				api.setPositionTarget(uploadPos);
+			}
+
+			break;
+			
 	}
 }
 
@@ -91,12 +107,9 @@ float velocity(float p1[]){
 	return sqrtf(d);
 }
 
-float alignLine(int POIID){
-    float vecDiff[3], POILoc[3];
-    float foo[] = {me[0],me[1],me[2]};
-    game.getPOILoc(POILoc,POIID);
-    mathVecSubtract(vecDiff, POILoc, foo, 3);
-    mathVecNormalize(vecDiff,3);
-    float goo[] = {me[6], me[7], me[8]};
-    return mathVecInner(vecDiff, goo, 3) > cosf(0.05) ;
+void uploadCalc(float uploadPos[], me[]){
+	mathVecNormalize(me,3);
+	for (int i = 0; i < 3; i++) {
+		uploadPos[i] = me[i] * 0.5;
+	}
 }
