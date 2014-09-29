@@ -104,6 +104,11 @@ void loop() {
 				state = 0;
 			}
 			else {
+
+				mathVecSubtract(facing,POI,me,3);
+				mathVecNormalize(facing,3);
+				api.setAttitudeTarget(facing);
+
 				api.setPositionTarget(uploadPos);
 				game.takePic(POIID);
 				game.takePic(POIID);
