@@ -1,64 +1,67 @@
-//Yeech + Dennis = EPIC SWAG
+// The Den Cheng Code
+// Not to be confused with the Da Vinci Code
 
 ZRState me;
-int state, POIID, picNum; //, solarFlareBegin, solarFlareEnd;
-float POI[3],test0[3],test1[3],breakingPos[3],facing[3],uploadPos[3]; //, temp[3];
+int state, POIID, picNum, solarFlareBegin;
+float POI[3],otherPOI[3],breakingPos[3],facing[3],uploadPos[3];
 
 void init() {
 
-	state = 0;
+	solarFlareBegin = 1000; //Just to make the solar storm evasion code neater
 
 }
 
 void loop() {
 	
-	DEBUG(("State = %d\n", state));
-
 	api.getMyZRState(me);
 
-	if(api.getTime() % 60 == 0) state = 0; // "CODE SIZE MATTERS" -- Dennis
+	if(api.getTime() % 60 == 0) state = 0;
 	
+	DEBUG(("State = %d\n", state));
+
 	picNum = game.getMemoryFilled();
 
-	// Solar Storm Evasion -- Best just to ignore the flares.
-	
-	//for (int i = 0; i < 3; i++) {
-	//    temp[i] = me[i];
-	//}
+	// Solar Storm Evasion
 
-	//solarFlareBegin = api.getTime() + game.getNextFlare();
-	//solarFlareEnd = solarFlareBegin + 3;
-	//if (api.getTime() == (solarFlareBegin - 2)) {
-	//	api.setPositionTarget(temp);
-	//	game.turnOff();
-	//}
-
-	if (api.getTime() == solarFlareEnd) {
-		game.turnOn();
-		state = 0;
+	if (api.getTime() == solarFlareBegin) {
+	    DEBUG(("Until further notice, I am off.\n"));
+		game.turnOff();
 	}
-
+	else if (api.getTime() == solarFlareBegin + 3) {
+	    DEBUG(("I am now on.\n"));
+		game.turnOn();
+		if (state == 3) state = 0;
+	}
+	else if (game.getNextFlare() != -1) {
+	    solarFlareBegin = api.getTime() + game.getNextFlare();
+	    DEBUG(("Next solar flare will occur at %ds.\n", solarFlareBegin));
+	}
+	else if (api.getTime() == solarFlareBegin + 1 || api.getTime() == solarFlareBegin + 2) {
+	    DEBUG(("Ah shit, it's a flare!\n"));
+	}
+	else {
+	    DEBUG(("I don't know when the next flare is, so stop asking.\n"));
+	}
+	
 	switch (state) {
 
 		case 0: // POI Selection
-			game.getPOILoc(test0,0);
-			game.getPOILoc(test1,1);
-			if (distance(me,test0) <= distance(me,test1)) {
-				POIID = 0;
-				for (int i = 0; i < 3; i++) POI[i] = test0[i];
-	        		state = 1;
-			}
-			else {
+			game.getPOILoc(POI,0);
+			game.getPOILoc(otherPOI,1);
+			if (distance(me,otherPOI) <= distance(me,POI)) {
 				POIID = 1;
-	    			for (int i = 0; i < 3; i++) POI[i] = test1[i];
-	       			state = 1;
+				for (int i = 0; i < 3; i++) POI[i] = otherPOI[i];
 			}
+			else POIID = 0;
 			
 			DEBUG(("POI Coors = %f,%f,%f\n",POI[0],POI[1],POI[2]));
 
 			for (int i = 0; i < 3; i++) {
-				breakingPos[i] = POI[i] * 2.5; //1.5625; <- let's try the outer zone
+				breakingPos[i] = POI[i] * 2.0; //1.5625; <- let's try the outer zone
 			}
+			
+			state = 1;
+			
 			break;
 
 		case 1: // "Borrowed" from Young + some personal refinement
@@ -86,7 +89,7 @@ void loop() {
 			game.takePic(POIID);
 
 			if (picNum > 0) {
-				DEBUG(("%d pictures have been taken", picNum));
+				DEBUG(("%d picture(s) have been taken\n", picNum));
 				uploadCalc(uploadPos,me);
 				api.setPositionTarget(uploadPos);
 				state = 3;
@@ -94,10 +97,11 @@ void loop() {
 
 			break;
 
-		case 3: // uploading and rebooting, works
-		    if (picNum == 0) state = 0;
-			else if (velocity(me) < 0.01 && distance(me,uploadPos) < 0.05) {
+		case 3: // Upload the picture
+			if (velocity(me) < 0.01 && distance(me,uploadPos) < 0.05) {
 				game.uploadPic();
+				DEBUG(("I just uploaded a picture.\n"));
+				state = 0;
 			}
 			else {
 				api.setPositionTarget(uploadPos);
@@ -127,6 +131,6 @@ float velocity(float p1[]){
 void uploadCalc(float uploadPos[], float me[]){
 	mathVecNormalize(me,3);
 	for (int i = 0; i < 3; i++) {
-		uploadPos[i] = me[i] * 0.6; // Can't go lower than this
+		uploadPos[i] = me[i] * 0.6;
 	}
 }
