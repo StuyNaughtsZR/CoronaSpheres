@@ -24,23 +24,23 @@ void loop() {
 	// Solar Storm Evasion -- Doesn't work you ding-dong, the sphere needs time to turn off
 
 	if (api.getTime() == solarFlareBegin - 2) {
-	    //DEBUG(("Until further notice, I am off.\n"));
+	    DEBUG(("Until further notice, I am off.\n"));
 		game.turnOff();
 	}
 	else if (api.getTime() == solarFlareBegin + 3) {
-	    //DEBUG(("I am now on.\n"));
+	    DEBUG(("I am now on.\n"));
 		game.turnOn();
 		if (state == 3) state = 0;
 	}
 	else if (game.getNextFlare() != -1) {
 	    solarFlareBegin = api.getTime() + game.getNextFlare();
-	    //DEBUG(("Next solar flare will occur at %ds.\n", solarFlareBegin));
+	    DEBUG(("Next solar flare will occur at %ds.\n", solarFlareBegin));
 	}
 	else if (api.getTime() == solarFlareBegin + 1 || api.getTime() == solarFlareBegin + 2) {
-	    //DEBUG(("Ah shit, it's a flare!\n"));
+	    DEBUG(("Ah shit, it's a flare!\n"));
 	}
 	else {
-	    //DEBUG(("I don't know when the next flare is, so stop asking.\n"));
+	    DEBUG(("I don't know when the next flare is, so stop asking.\n"));
 	}
 	
 	switch (state) {
@@ -54,7 +54,7 @@ void loop() {
 			}
 			else POIID = 0;
 			
-			//DEBUG(("POI Coors = %f,%f,%f\n",POI[0],POI[1],POI[2]));
+			DEBUG(("POI Coors = %f,%f,%f\n",POI[0],POI[1],POI[2]));
 
 			for (int i = 0; i < 3; i++) {
 				breakingPos[i] = POI[i] * 2.0; //1.5625; <- let's try the outer zone
@@ -89,7 +89,7 @@ void loop() {
 			game.takePic(POIID);
 
 			if (picNum > 0) {
-				//DEBUG(("%d picture(s) have been taken\n", picNum));
+				DEBUG(("%d picture(s) have been taken\n", picNum));
 				uploadCalc(uploadPos,me);
 				api.setPositionTarget(uploadPos);
 				state = 3;
@@ -97,7 +97,34 @@ void loop() {
 
 			break;
 
-		case 3: // Upload the picture
+		case 3: // Taking pic in outer zone
+			for (int i = 0; i < 3; i++) {
+				brakingPos[i] = POI[i] * 2.5
+			}
+			
+			if (picNum > 1) {
+				DEBUG(("%d picture(s) have been taken\n", picNum));
+				uploadCalc(uploadPos,me);
+				api.setPositionTarget(uploadPos);
+				state = 4;
+			}
+			
+			else {
+				api.setPositionTarget(breakingPos);
+			
+				mathVecSubtract(facing,POI,me,3);
+				mathVecNormalize(facing,3);
+				api.setAttitudeTarget(facing);
+
+				game.takePic(POIID);
+				game.takePic(POIID); // Old school way of spamming
+				game.takePic(POIID);
+				game.takePic(POIID);
+				game.takePic(POIID); // Old school way of spamming
+				game.takePic(POIID);
+			}
+
+		case 4: // Upload the picture
 			if (velocity(me) < 0.01 && distance(me,uploadPos) < 0.05) {
 				game.uploadPic();
 				//DEBUG(("I just uploaded a picture.\n"));
