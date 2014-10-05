@@ -26,7 +26,7 @@ void goToTarget(float target[]){
     for(int i = 0; i < 3; i++)
         myPos[i] = me[i];
 	if(startOfGoToTarget){
-	    mathVecSubtract(V1, target, myPos, 3); //don't understand the point of this line 
+	    mathVecSubtract(V1, target, myPos, 3);  
 	    mathVecSubtract(V2, myPos, origin, 3);
 	    lambda = mathVecInner(V2,V1,3) / mathVecInner(V1,V1,3);
 	    for(int i = 0; i < 3; i++){
@@ -65,5 +65,4 @@ void goToTarget(float target[]){
 	        api.setPositionTarget(target);
 	    }
 	}
-	
 }
