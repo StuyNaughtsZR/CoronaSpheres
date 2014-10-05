@@ -240,3 +240,28 @@ void setPositionTarget(float pos[]) {
         DEBUG(("The swagiest function ever returned false.\n"));
     }
 }
+
+int AreWeThereYet(float target[3], float maxDis, float maxSpeed) {
+	ZRState me;
+	api.getMyZRState(me);
+	return (distance(me,target) < maxDis) && (velocity(me) < maxSpeed);
+}
+
+float minDistanceFromAsteroid(float target[3]){
+	float path[3], proj[3], dis[3], negMe[3];
+	ZRState = me;
+	api.getMyZRState(me);
+	
+	for (int i = 0; i < 3; i++) {
+		path[i] = target[i] - me[i];
+		negMe[i] = -me[i];
+	}
+	
+	mathVecProject(proj,negMe,path,3);
+
+	for (int i = 0; i < 3; i++) {
+		dis[i] = me[i] + proj[i];
+	}
+
+	return mathVecMagnitude(dis,3);
+}
