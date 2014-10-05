@@ -37,9 +37,13 @@ void goToTarget(float target[]){
 	    if(mathVecMagnitude(V3,3) < 0.31){
 	        DEBUG(("setting waypoint"));
 	        for(int i = 0; i < 3; i++){
-	            waypoint[i] = V3[i] * (0.31 / mathVecMagnitude(V3,3)) + 0.08;  
-	                                       //waypoint=V3 scaled to outside of danger zone
-	        }
+    	            if(V3[i] > 0){
+    	                waypoint[i] = V3[i] * (0.31 / mathVecMagnitude(V3,3)) + 0.05;
+    	            }
+    	            else{
+    	                waypoint[i] = V3[i] * (0.31 / mathVecMagnitude(V3,3)) - 0.05;
+    	            }
+	        }                              //waypoint=V3 scaled to outside of danger zone
 	        mathVecSubtract(originalVecBetween, waypoint, myPos, 3);
 	    }
 	    else{
