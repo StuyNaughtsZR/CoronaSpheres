@@ -212,7 +212,10 @@ void setPositionTarget(float pos[]) {
     mathVecSubtract(meToPos, pos, me, 3);
     mathVecProject(proj, me, meToPos, 3);
     mathVecSubtract(testPoint, me, proj, 3);
-    if (mathVecMagnitude(testPoint, 3) > 0.31) api.setPositionTarget(pos);
+    if (mathVecMagnitude(testPoint, 3) > 0.31) {
+        api.setPositionTarget(pos);
+        DEBUG(("The swagiest function ever returned true.\n"));
+    }
     else {
         float Me[3], normal[3], theta, rotationMatrix[3][3], targetTest1[3], targetTest2[3], newTarget[3];
         for (int i = 0; i < 3; i++) Me[i] = me[i];
@@ -234,5 +237,6 @@ void setPositionTarget(float pos[]) {
         if (distance(targetTest1, pos) < distance(targetTest2, pos)) for (int i = 0; i < 3; i++) newTarget[i] = targetTest1[i];
         else for (int i = 0; i < 3; i++) newTarget[i] = targetTest2[i];
         api.setPositionTarget(newTarget);
+        DEBUG(("The swagiest function ever returned false.\n"));
     }
 }
