@@ -1,27 +1,4 @@
-ZRState me;
-float target[3], origin[3], originalVecBetween[3], vecBetween[3], myPos[3], shadow1[3];
-float V1[3], V1p[3], V2[3], V3[3], waypoint[3], originalVecToTarget[3],vecToTarget[3];
-bool startOfGoToTarget, goingToWaypoint;
-float originalDistance, distanceBetweenWS, distanceBetweenTS, lambda;
-
-void init(){
-	origin[0] = 0.0;
-	origin[1] = 0.0;
-	origin[2] = 0.0;
-	
-	shadow1[0] = 0.32;    
-	shadow1[1] = 0.19;
-	shadow1[2] = 0.0;
-
-	startOfGoToTarget = true;
-	goingToWaypoint = true;
-}
-
-void loop(){
-	goToTarget(shadow1);
-}
-
-void goToTarget(float target[]){
+{
     api.getMyZRState(me);
     for(int i = 0; i < 3; i++){
         myPos[i] = me[i];
@@ -71,7 +48,8 @@ void goToTarget(float target[]){
 	    else{
 	        mathVecSubtract(vecToTarget, target, myPos, 3);
 	        distanceBetweenTS = mathVecMagnitude(vecToTarget, 3);
-	        if(distanceBetweenTS > mathVecMagnitude(originalVecToTarget,3) / 1.5){ 
+	        
+	        if(distanceBetweenTS > mathVecMagnitude(originalVecToTarget,3) / 1.1){ 
 	            api.setVelocityTarget(originalVecToTarget); 
 	            DEBUG(("Fast to target"));
 	        }
