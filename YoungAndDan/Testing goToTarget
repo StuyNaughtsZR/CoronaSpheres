@@ -56,7 +56,7 @@ void goToTarget(float target[]){
 	    if(goingToWaypoint){
 	        mathVecSubtract(vecBetween, waypoint, myPos, 3);
 	        distanceBetweenWS = mathVecMagnitude(vecBetween, 3);
-	        if(distanceBetweenWS > mathVecMagnitude(originalVecBetween,3) / 3.2){ 
+	        if(distanceBetweenWS > mathVecMagnitude(originalVecBetween,3) / 3.3){ 
 	                                   //when to stop using velocity target is arbitrary
 	            api.setVelocityTarget(originalVecBetween); 
 	                                   //magnitude stays the same as beginning magnitude
