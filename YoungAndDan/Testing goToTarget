@@ -1,7 +1,8 @@
 ZRState me;
 float target[3], origin[3], originalVecBetween[3], vecBetween[3], myPos[3], shadow1[3];
 float V1[3], V1p[3], V2[3], V3[3], waypoint[3], originalVecToTarget[3],vecToTarget[3];
-bool startOfGoToTarget, goingToWaypoint, afterWaypoint;
+int state;
+bool afterWaypoint;
 float originalDistance, distanceBetweenWS, distanceBetweenTS, lambda;
 
 void init(){
@@ -13,9 +14,9 @@ void init(){
 	shadow1[1] = -0.19;
 	shadow1[2] = 0.15;
 
-	startOfGoToTarget = true;
-	goingToWaypoint = true;
 	afterWaypoint = false;
+	
+	state = 0;
 }
 
 void loop(){
@@ -27,33 +28,37 @@ void goToTarget(float target[]){
     for(int i = 0; i < 3; i++){
         myPos[i] = me[i];
     }
-	if(startOfGoToTarget){
-	    mathVecSubtract(V1, target, myPos, 3);
-	    mathVecSubtract(V2, myPos, origin, 3);
-	    lambda = mathVecInner(V2,V1,3) / mathVecInner(V1,V1,3);
-	    for(int i = 0; i < 3; i++){
-	        V1p[i] = V1[i] * lambda;
-	    }
-	    mathVecSubtract(V3, V2, V1p, 3); 
-	    if(mathVecMagnitude(V3,3) < 0.31){
-	        DEBUG(("setting waypoint"));
-	        for(int i = 0; i < 3; i++){
-    	        if(V3[i] >= 0){
-    	            waypoint[i] = V3[i] * (0.31 / mathVecMagnitude(V3,3)) + 0.05;
-    	        }
-    	        else{
-    	            waypoint[i] = V3[i] * (0.31 / mathVecMagnitude(V3,3)) - 0.05;
-    	        }
-	        }                  //waypoint=V3 scaled to outside of danger zone
-	    mathVecSubtract(originalVecBetween, waypoint, myPos, 3);
-	    }
-	    else{
-	        goingToWaypoint = false;
-	    }
-	    startOfGoToTarget = false;
-	}
-	else{
-	    if(goingToWaypoint){
+    switch (state){
+        case 0: //initializing
+	
+    	    mathVecSubtract(V1, target, myPos, 3);
+    	    mathVecSubtract(V2, myPos, origin, 3);
+    	    lambda = mathVecInner(V2,V1,3) / mathVecInner(V1,V1,3);
+    	    for(int i = 0; i < 3; i++){
+    	        V1p[i] = V1[i] * lambda;
+    	    }
+    	    mathVecSubtract(V3, V2, V1p, 3); 
+    	    if(mathVecMagnitude(V3,3) < 0.31){
+    	        DEBUG(("setting waypoint"));
+    	        for(int i = 0; i < 3; i++){
+        	        if(V3[i] >= 0){
+        	            waypoint[i] = V3[i] * (0.31 / mathVecMagnitude(V3,3)) + 0.05;
+        	        }
+        	        else{
+        	            waypoint[i] = V3[i] * (0.31 / mathVecMagnitude(V3,3)) - 0.05;
+        	        }
+    	        }                  //waypoint=V3 scaled to outside of danger zone
+    	    mathVecSubtract(originalVecBetween, waypoint, myPos, 3);
+    	    }
+    	    else{
+    	        state = 2;
+    	    }
+    	    state = 1;
+    	    break;
+	   
+	
+	    case 1:
+	    
 	        mathVecSubtract(vecBetween, waypoint, myPos, 3);
 	        distanceBetweenWS = mathVecMagnitude(vecBetween, 3);
 	        if(distanceBetweenWS > mathVecMagnitude(originalVecBetween,3) / 3.3){ 
@@ -66,10 +71,11 @@ void goToTarget(float target[]){
 	            DEBUG(("going to target"));
 	            api.setPositionTarget(target);
 	            mathVecSubtract(originalVecToTarget, target, myPos, 3);
-	            goingToWaypoint = false;
+	            state = 2;
 	        }
-	    }
-	    else{
+	        break;
+	    
+	    case 2:
 	        mathVecSubtract(vecToTarget, target, myPos, 3);
 	        distanceBetweenTS = mathVecMagnitude(vecToTarget, 3);
 	        
@@ -88,6 +94,6 @@ void goToTarget(float target[]){
 	            api.setPositionTarget(target);
     	        DEBUG(("Slowing down to target"));
 	        }
-	    }
+	        break;
 	}
 }
