@@ -1,5 +1,5 @@
-// The Den Cheng Code
-// Not to be confused with the Da Vinci Code
+// Yeech's Code
+// Not to be confused with the Vinci Code
 
 ZRState me;
 int state, POIID, picNum, solarFlareBegin;
@@ -65,7 +65,7 @@ void loop() {
 			break;
 
 		case 1: // Orbit Function here
-			if (velocity(me) < 0.001) state = 2;
+			if (AreWeThereYet(brakingPos,0.01,0.01)) state = 2;
 			else {
 				setPositionTarget(brakingPos);
 			    mathVecSubtract(facing,POI,me,3);
@@ -102,7 +102,7 @@ void loop() {
 			}
 			
 			else {
-				api.setPositionTarget(brakingPos);
+				setPositionTarget(brakingPos);
 			    mathVecSubtract(facing,POI,me,3);
 			    mathVecNormalize(facing,3);
 			    api.setAttitudeTarget(facing);
@@ -161,55 +161,30 @@ void mathVecProject(float c[], float a[], float b[], int n) {
     }
 }
 
-void MathVecOuter(float c[][3], float a[], float b[]) {
-    // the api function is stupid and returns a one-dimensional array, rather than a matrix
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            c[i][j] = a[i] * b[j];
-        }
-    }
+void setPositionTarget(float target[]) {
+	ZRState = me;
+	api.getMyZRState(me);
+	float myPos[3];
+	
+	for(int i = 0; i < 3; i++) {
+		myPos[i] = me[i];
+	}
+
+	if (minDistanceFromAsteroid(target) > 3.2) {
+		api.setPositionTarget(target)
+	}
+	
+	else {
+		float opposite[3], perpendicular[3], temp[3];
+		mathVecProject(opposite,target,myPos,3);
+		mathVecSubtract(perpendicular,target,opposite,3);
+		for (int i = 0; i < 3; i++) {
+			temp[i] = mathVecMagnitude(myPos,3) * perpendicular[i] / mathVecMagnitude(perpendicular);
+		}
+
+		api.setPositionTarget(temp);
+	}
 }
-
-void MathMatAdd(float c[][3], float a[][3], float b[][3]) {
-    // the api function is stupid and returns a one-dimensional array, rather than a matrix
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            c[i][j] = a[i][j] + b[i][j];
-        }
-    }
-}
-
-void MathMatVecMult(float c[], float a[][3], float b[]) {
-    // the api function is stupid and takes in two one-dimensional arrays, rather than a matrix and a vector
-    for (int i = 0; i < 3; i++) c[i] = 0;
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            c[i] += a[i][j] * b[j];
-        }
-    }
-}
-
-void mathVecRotate(float c[][3], float a[], float theta) {
-    // creates a rotation matrix about axis a by theta radians, puts the result in c
-    // only for 3D
-    float I[3][3] = {{1, 0, 0}, {0, 1, 0}, {1, 0, 0}}; // identity matrix
-    float ax[3][3] = {{0, -a[2], a[1]}, {a[2], 0, -a[0]}, {-a[1], a[0], 0}}; // cross product matrix of a
-    float A[3][3]; // tensor product of a with itself
-    MathVecOuter(A, a, a);
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            I[i][j] *= cosf(theta);
-            ax[i][j] *= sinf(theta);
-            A[i][j] *= 1 - cosf(theta);
-        }
-    }
-    MathMatAdd(c, I, ax);
-    MathMatAdd(c, c, A);
-}
-
-// Dennis' code which i fail to fathom
-
-void setPositionTarget(float )
 
 int AreWeThereYet(float target[3], float maxDis, float maxSpeed) {
 	ZRState me;

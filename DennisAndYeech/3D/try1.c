@@ -161,7 +161,7 @@ void mathVecProject(float c[], float a[], float b[], int n) {
     }
 }
 
-void MathVecOuter(float c[][3], float a[], float b[]) {
+void mathVecOuter(float c[][3], float a[], float b[]) {
     // the api function is stupid and returns a one-dimensional array, rather than a matrix
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
@@ -170,7 +170,7 @@ void MathVecOuter(float c[][3], float a[], float b[]) {
     }
 }
 
-void MathMatAdd(float c[][3], float a[][3], float b[][3]) {
+void mathMatAdd(float c[][3], float a[][3], float b[][3]) {
     // the api function is stupid and returns a one-dimensional array, rather than a matrix
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
@@ -179,7 +179,7 @@ void MathMatAdd(float c[][3], float a[][3], float b[][3]) {
     }
 }
 
-void MathMatVecMult(float c[], float a[][3], float b[]) {
+void mathMatVecMult(float c[], float a[][3], float b[]) {
     // the api function is stupid and takes in two one-dimensional arrays, rather than a matrix and a vector
     for (int i = 0; i < 3; i++) c[i] = 0;
     for (int i = 0; i < 3; i++) {
@@ -195,7 +195,7 @@ void mathVecRotate(float c[][3], float a[], float theta) {
     float I[3][3] = {{1, 0, 0}, {0, 1, 0}, {1, 0, 0}}; // identity matrix
     float ax[3][3] = {{0, -a[2], a[1]}, {a[2], 0, -a[0]}, {-a[1], a[0], 0}}; // cross product matrix of a
     float A[3][3]; // tensor product of a with itself
-    MathVecOuter(A, a, a);
+    mathVecOuter(A, a, a);
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             I[i][j] *= cosf(theta);
@@ -203,8 +203,8 @@ void mathVecRotate(float c[][3], float a[], float theta) {
             A[i][j] *= 1 - cosf(theta);
         }
     }
-    MathMatAdd(c, I, ax);
-    MathMatAdd(c, c, A);
+    mathMatAdd(c, I, ax);
+    mathMatAdd(c, c, A);
 }
 
 void setPositionTarget(float pos[]) {
@@ -212,27 +212,25 @@ void setPositionTarget(float pos[]) {
     mathVecSubtract(meToPos, pos, me, 3);
     mathVecProject(proj, me, meToPos, 3);
     mathVecSubtract(testPoint, me, proj, 3);
-    if (mathVecMagnitude(testPoint, 3) > 0.31) {
+    if (mathVecMagnitude(testPoint, 3) > 0.314) {
         api.setPositionTarget(pos);
         DEBUG(("The swagiest function ever returned true.\n"));
     }
     else {
-        float Me[3], normal[3], theta, rotationMatrix[3][3], targetTest1[3], targetTest2[3], newTarget[3];
+        float Me[3], normal[3], theta, rotationMatrix[3][3], newMeToPos[3], targetTest1[3], targetTest2[3], newTarget[3];
         for (int i = 0; i < 3; i++) Me[i] = me[i];
         mathVecCross(normal, Me, meToPos);
         // normal to the plane containing Me, pos, and origin
-        theta = acosf(0.31 / mathVecMagnitude(Me, 3));
+        theta = asinf(0.315 / mathVecMagnitude(Me, 3));
         // angle between the position vectors to Me and either of the points of tangency
         mathVecRotate(rotationMatrix, normal, theta);
         // creates the rotation matrix about the normal by an angle of theta
-        mathVecNormalize(Me, 3);
-        for (int i = 0; i < 3; i++) Me[i] *= 0.315;
-        // makes Me slightly over the size of the danger zone (just in case)
-        MathMatVecMult(targetTest1, rotationMatrix, Me);
+	mathMatVecMult(newMeToPos, rotationMatrix, 
+        mathMatVecMult(targetTest1, rotationMatrix, Me);
         // rotates Me so that it becomes the position vector to one of the points of tangency
         mathVecRotate(rotationMatrix, normal, -theta);
         // creates the rotation matrix about the normal by the opposite angle
-        MathMatVecMult(targetTest2, rotationMatrix, Me);
+        mathMatVecMult(targetTest2, rotationMatrix, Me);
         // rotates Me so that it becomes the position vector to the other point of tangency
         if (distance(targetTest1, pos) < distance(targetTest2, pos)) for (int i = 0; i < 3; i++) newTarget[i] = targetTest1[i];
         else for (int i = 0; i < 3; i++) newTarget[i] = targetTest2[i];
