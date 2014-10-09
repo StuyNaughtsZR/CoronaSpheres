@@ -107,6 +107,7 @@ void loop() {
 			    mathVecNormalize(facing,3);
 			    api.setAttitudeTarget(facing);
                 game.takePic(POIID);
+                game.takePic(POIID);
 			}
 
 		case 4: // Upload the picture
@@ -157,7 +158,7 @@ void uploadCalc(float uploadPos[], float me[]){
 void mathVecProject(float c[], float a[], float b[], int n) {
     // finds the projection of a onto b, puts the result in c
     for (int i = 0; i < n; i++) {
-        c[i] = mathVecInner(a, b, 3)/mathVecInner(b, b, 3) * b[i];
+        c[i] = (mathVecInner(a,b,3) * b[i]) / (mathVecMagnitude(b,3) * mathVecMagnitude(b,3));
     }
 }
 
@@ -175,11 +176,29 @@ void setPositionTarget(float target[]) {
 	}
 	
 	else {
-		float opposite[3], perpendicular[3], temp[3];
+		float opposite[3], perpendicular[3], mePrep[3],proj2[3],fakePath[3],tangentPt[3],temp[3],path[3];
 		mathVecProject(opposite,target,myPos,3);
 		mathVecSubtract(perpendicular,target,opposite,3);
 		for (int i = 0; i < 3; i++) {
-			temp[i] = mathVecMagnitude(myPos,3) * perpendicular[i] / mathVecMagnitude(perpendicular,3);;
+			mePrep[i] = mathVecMagnitude(myPos,3) * perpendicular[i] / mathVecMagnitude(perpendicular,3);;
+		}
+
+		mathVecSubtract(fakePath,mePrep,myPos,3);
+
+		mathVecProject(proj2,mePrep,fakePath,3);
+		
+		mathVecAdd(temp,mePrep,proj2,3);
+
+		mathVecNormalize(temp,3);
+
+		for (int i = 0; i < 3; i++) {
+			temp[i] = tangentPt[i];
+		}
+
+		mathVecAdd(path,myPos,tangentPt,3);
+
+		for (int i = 0; i < 3; i++) {
+			temp[i] = path[i] * 3;
 		}
 
 		api.setPositionTarget(temp);
@@ -210,3 +229,5 @@ float minDistanceFromAsteroid(float target[3]){
 
 	return mathVecMagnitude(dis,3);
 }
+
+
