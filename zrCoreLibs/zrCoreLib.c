@@ -19,7 +19,7 @@ void dilateValue(float pt1[3], float pt2[3], float dilation , float dst[3]){
 void goToLoc(ZRState state, float dest[3], float smoothness){
 	//You should run getMyZRState a few lines before this
 	//state is your ZRState (a 12 element array)
-	//
+	//Smoothness is a multiplier on the array. Optimal range: 0.15-0.35
 	float val[3];
 	mathVecSubtract(val, dest, state , 3);
 	for(int i=0; i<3; i++){
