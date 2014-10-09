@@ -74,7 +74,7 @@ void loop() {
 			}
 			break;
 
-		case 2: // Legacy Code to me
+		case 2: // First Pic in inner Zone
 			setPositionTarget(brakingPos);
 			mathVecSubtract(facing,POI,me,3);
 			mathVecNormalize(facing,3);
@@ -162,7 +162,7 @@ void mathVecProject(float c[], float a[], float b[], int n) {
 }
 
 void setPositionTarget(float target[]) {
-	ZRState = me;
+	ZRState me;
 	api.getMyZRState(me);
 	float myPos[3];
 	
@@ -170,8 +170,8 @@ void setPositionTarget(float target[]) {
 		myPos[i] = me[i];
 	}
 
-	if (minDistanceFromAsteroid(target) > 3.2) {
-		api.setPositionTarget(target)
+	if (minDistanceFromAsteroid(target) > 0.32) {
+		api.setPositionTarget(target);
 	}
 	
 	else {
@@ -179,7 +179,7 @@ void setPositionTarget(float target[]) {
 		mathVecProject(opposite,target,myPos,3);
 		mathVecSubtract(perpendicular,target,opposite,3);
 		for (int i = 0; i < 3; i++) {
-			temp[i] = mathVecMagnitude(myPos,3) * perpendicular[i] / mathVecMagnitude(perpendicular);
+			temp[i] = mathVecMagnitude(myPos,3) * perpendicular[i] / mathVecMagnitude(perpendicular,3);;
 		}
 
 		api.setPositionTarget(temp);
@@ -194,7 +194,7 @@ int AreWeThereYet(float target[3], float maxDis, float maxSpeed) {
 
 float minDistanceFromAsteroid(float target[3]){
 	float path[3], proj[3], dis[3], negMe[3];
-	ZRState = me;
+	ZRState me;
 	api.getMyZRState(me);
 	
 	for (int i = 0; i < 3; i++) {
