@@ -156,7 +156,9 @@ void uploadCalc(float uploadPos[], float me[]){
 
 void mathVecProject(float c[], float a[], float b[], int n) {
     // finds the projection of a onto b, puts the result in c
-    c[i] = (mathVecInner(a,b,3) * b[i]) / (mathVecMagnitude(b,3) * mathVecMagnitude(b,3));
+    for (int i = 0; i < n; i++) {
+        c[i] = (mathVecInner(a,b,3) * b[i]) / (mathVecMagnitude(b,3) * mathVecMagnitude(b,3));
+    }
 }
 
 void setPositionTarget(float target[]) {
@@ -208,3 +210,4 @@ float minDistanceFromAsteroid(float target[3]){
 
 	return mathVecMagnitude(dis,3);
 }
+
