@@ -107,6 +107,7 @@ void loop() {
 			    mathVecNormalize(facing,3);
 			    api.setAttitudeTarget(facing);
                 game.takePic(POIID);
+                game.takePic(POIID);
 			}
 
 		case 4: // Upload the picture
@@ -197,7 +198,7 @@ void setPositionTarget(float target[]) {
 		mathVecAdd(path,myPos,tangentPt,3);
 
 		for (int i = 0; i < 3; i++) {
-			temp[i] = path[i] * 50;
+			temp[i] = path[i] * 3;
 		}
 
 		api.setPositionTarget(temp);
@@ -228,4 +229,5 @@ float minDistanceFromAsteroid(float target[3]){
 
 	return mathVecMagnitude(dis,3);
 }
+
 
