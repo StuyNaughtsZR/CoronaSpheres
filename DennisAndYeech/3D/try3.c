@@ -1,5 +1,4 @@
-// The Den Cheng Code
-// Not to be confused with the Da Vinci Code
+// Dennis Swagtunin's Code
 
 ZRState me;
 int state, POIID, picNum, solarFlareBegin;
@@ -8,11 +7,26 @@ float POI[3],otherPOI[3],brakingPos[3],facing[3],uploadPos[3];
 void init() {
 
 	solarFlareBegin = 1000; //Just to make the solar storm evasion code neater
-
+	
+	// test mathVecRotate
+	float blah[3][3], k[3];
+	k[0] = 0.; k[1] = 0.; k[2] = 1.;
+	mathVecRotate(blah, k, 1.57079633);
+    DEBUG(("{{%f, %f, %f}, {%f, %f, %f}, {%f, %f, %f}}", blah[0][0], blah[0][1], blah[0][2], blah[1][0], blah[1][1], blah[1][2], blah[2][0], blah[2][1], blah[2][2]));
+    
+    //test calcNewTarget
+    //me = {{0, 0.4 / sqrtf(2), 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}
+    for (int i = 0; i < 12; i++) me[i] = 0;
+    me[1] = 0.4 / sqrtf(2);
+    float newTarget[3];
+    float target[3] = {1, -1, 0};
+    calcNewTarget(newTarget, target);
+    DEBUG(("{%f, %f, %f}", newTarget[0], newTarget[1], newTarget[2]));
+    
 }
 
 void loop() {
-	
+    
 	api.getMyZRState(me);
 
 	if(api.getTime() % 60 == 0 && state != 4) state = 0;
@@ -40,7 +54,7 @@ void loop() {
 	    DEBUG(("I don't know when the next flare is, so stop asking.\n"));
 	    solarFlareBegin = 1000; //Fixes a glitch that makes game.getNextFlare()
 	    //return 30s at some random point in the beginning of the game,
-	    //and from then on return -1 until the next actual flare, so that the 
+	    //and from then on returns -1 until the next actual flare, so that the 
 	    //SPHERE reboots for no reason.
 	}
 	
@@ -58,7 +72,7 @@ void loop() {
 			DEBUG(("POI Coors = %f,%f,%f\n",POI[0],POI[1],POI[2]));
 
 			for (int i = 0; i < 3; i++) {
-				brakingPos[i] = POI[i] * 2.0; //1.5625; <- let's try the outer zone
+				brakingPos[i] = POI[i] * 2.0;
 			}
 			
 			state = 1;
@@ -83,7 +97,9 @@ void loop() {
 
 			if (picNum > 0) {
 				DEBUG(("%d picture(s) have been taken\n", picNum));
-				uploadCalc(uploadPos,me);
+	            for (int i = 0; i < 3; i++) {
+	                uploadPos[i] = me[i] / mathVecMagnitude(me, 3) * 0.6;
+	            }
 				setPositionTarget(uploadPos);
 				state = 3;
 			}
@@ -96,7 +112,9 @@ void loop() {
 			
 			if (picNum > 1) {
 				DEBUG(("%d picture(s) have been taken.\n", picNum));
-				uploadCalc(uploadPos,me);
+				for (int i = 0; i < 3; i++) {
+	                uploadPos[i] = me[i] / mathVecMagnitude(me, 3) * 0.6;
+	            }
 				setPositionTarget(uploadPos);
 				state = 4;
 			}
@@ -147,13 +165,6 @@ float velocity(float p1[]){
 	return sqrtf(d);
 }
 
-void uploadCalc(float uploadPos[], float me[]){
-	mathVecNormalize(me,3);
-	for (int i = 0; i < 3; i++) {
-		uploadPos[i] = me[i] * 0.6;
-	}
-}
-
 void mathVecProject(float c[], float a[], float b[], int n) {
     // finds the projection of a onto b, puts the result in c
     for (int i = 0; i < n; i++) {
@@ -189,9 +200,11 @@ void mathMatVecMult(float c[], float a[][3], float b[]) {
     }
 }
 
-void mathVecRotate(float c[][3], float a[], float theta) {
-    // creates a rotation matrix about axis a by theta radians, puts the result in c
+void mathVecRotate(float c[][3], float axis[], float theta) {
+    // creates a rotation matrix about axis by theta radians, puts the result in c
     // only for 3D
+    float a[3];
+    for (int i = 0; i < 3; i++) a[i] = axis[i] / mathVecMagnitude(axis, 3); // unit vector in direction of axis
     float I[3][3] = {{1, 0, 0}, {0, 1, 0}, {1, 0, 0}}; // identity matrix
     float ax[3][3] = {{0, -a[2], a[1]}, {a[2], 0, -a[0]}, {-a[1], a[0], 0}}; // cross product matrix of a
     float A[3][3]; // tensor product of a with itself
@@ -207,59 +220,54 @@ void mathVecRotate(float c[][3], float a[], float theta) {
     mathMatAdd(c, c, A);
 }
 
-void setPositionTarget(float pos[]) {
-    float proj[3], meToPos[3], testPoint[3];
-    mathVecSubtract(meToPos, pos, me, 3);
-    mathVecProject(proj, me, meToPos, 3);
+float minDistanceFromAsteroid(float target[]) {
+	float proj[3], meToTarget[3], testPoint[3];
+    mathVecSubtract(meToTarget, target, me, 3);
+    mathVecProject(proj, me, meToTarget, 3);
     mathVecSubtract(testPoint, me, proj, 3);
-    if (mathVecMagnitude(testPoint, 3) > 0.314) {
-        api.setPositionTarget(pos);
+    return mathVecMagnitude(testPoint,3);
+}
+
+void calcNewTarget(float newTarget[], float target[]) {
+    float mag, Me[3], meToTarget[3], normal[3], theta, rotationMatrix[3][3], test1[3], test2[3];
+    mag = mathVecMagnitude(Me, 3);
+    for (int i = 0; i < 3; i++) Me[i] = me[i];
+    mathVecSubtract(meToTarget, target, Me, 3);
+    mathVecCross(normal, Me, meToTarget);
+    // normal to the plane containing Me, target, and origin
+    theta = asinf(0.315 / mag);
+    // angle between the position vectors to Me and either of the points of tangency
+    mathVecRotate(rotationMatrix, normal, theta);
+    // creates the rotation matrix about the normal by an angle of theta
+    mathMatVecMult(test1, rotationMatrix, Me);
+    // rotates Me so that it becomes the position vector to one of the points of tangency
+    mathVecRotate(rotationMatrix, normal, -theta);
+    // creates the rotation matrix about the normal by the opposite angle
+    mathMatVecMult(test2, rotationMatrix, Me);
+    // rotates Me so that it becomes the position vector to the other point of tangency
+    if (distance(test1, target) < distance(test2, target)) {
+        // if test1 is closer to the target
+        for (int i = 0; i < 3; i++) newTarget[i] = test1[i] / mag * 0.335;
+    }
+    else {
+        // if test2 is closer to the target
+        for (int i = 0; i < 3; i++) newTarget[i] = test2[i] / mag * 0.335;
+    }
+}
+
+void setPositionTarget(float target[]) {
+    if (distance(me, target) < 0.05) {
+        api.setPositionTarget(target);
+        DEBUG(("The swagiest function ever returned true.\n"));
+    }
+    else if (minDistanceFromAsteroid(target) > 0.314) {
+        api.setPositionTarget(target);
         DEBUG(("The swagiest function ever returned true.\n"));
     }
     else {
-        float Me[3], normal[3], theta, rotationMatrix[3][3], newMeToPos[3], targetTest1[3], targetTest2[3], newTarget[3];
-        for (int i = 0; i < 3; i++) Me[i] = me[i];
-        mathVecCross(normal, Me, meToPos);
-        // normal to the plane containing Me, pos, and origin
-        theta = asinf(0.315 / mathVecMagnitude(Me, 3));
-        // angle between the position vectors to Me and either of the points of tangency
-        mathVecRotate(rotationMatrix, normal, theta);
-        // creates the rotation matrix about the normal by an angle of theta
-	mathMatVecMult(newMeToPos, rotationMatrix, 
-        mathMatVecMult(targetTest1, rotationMatrix, Me);
-        // rotates Me so that it becomes the position vector to one of the points of tangency
-        mathVecRotate(rotationMatrix, normal, -theta);
-        // creates the rotation matrix about the normal by the opposite angle
-        mathMatVecMult(targetTest2, rotationMatrix, Me);
-        // rotates Me so that it becomes the position vector to the other point of tangency
-        if (distance(targetTest1, pos) < distance(targetTest2, pos)) for (int i = 0; i < 3; i++) newTarget[i] = targetTest1[i];
-        else for (int i = 0; i < 3; i++) newTarget[i] = targetTest2[i];
+        float newTarget[3];
+        calcNewTarget(newTarget, target);
         api.setPositionTarget(newTarget);
         DEBUG(("The swagiest function ever returned false.\n"));
     }
-}
-
-int AreWeThereYet(float target[3], float maxDis, float maxSpeed) {
-	ZRState me;
-	api.getMyZRState(me);
-	return (distance(me,target) < maxDis) && (velocity(me) < maxSpeed);
-}
-
-float minDistanceFromAsteroid(float target[3]){
-	float path[3], proj[3], dis[3], negMe[3];
-	ZRState = me;
-	api.getMyZRState(me);
-	
-	for (int i = 0; i < 3; i++) {
-		path[i] = target[i] - me[i];
-		negMe[i] = -me[i];
-	}
-	
-	mathVecProject(proj,negMe,path,3);
-
-	for (int i = 0; i < 3; i++) {
-		dis[i] = me[i] + proj[i];
-	}
-
-	return mathVecMagnitude(dis,3);
 }
