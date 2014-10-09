@@ -230,8 +230,8 @@ float minDistanceFromAsteroid(float target[]) {
 
 void calcNewTarget(float newTarget[], float target[]) {
     float mag, Me[3], meToTarget[3], normal[3], theta, rotationMatrix[3][3], test1[3], test2[3];
-    mag = mathVecMagnitude(Me, 3);
     for (int i = 0; i < 3; i++) Me[i] = me[i];
+    mag = mathVecMagnitude(Me, 3);
     mathVecSubtract(meToTarget, target, Me, 3);
     mathVecCross(normal, Me, meToTarget);
     // normal to the plane containing Me, target, and origin
