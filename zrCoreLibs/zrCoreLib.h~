@@ -7,5 +7,5 @@ void dilateValue(float pt1[3], float pt2[3], float dilation, float dst[3]);
 void goToLoc(ZRState state, float dest[3], float smoothness);
 
 //CoronaSpheres Specific commands
-void goToNoCollision(ZRState start , float end[3] , float currSpeed[3] , float leniency);
+void curvedPath(float start[3] , float end[3] , float inradius , float leniency);
 #endif
