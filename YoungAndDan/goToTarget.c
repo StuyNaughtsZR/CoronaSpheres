@@ -9,13 +9,10 @@ void init(){
 	origin[0] = 0.0;
 	origin[1] = 0.0;
 	origin[2] = 0.0;
-	
-	shadow1[0] = 0.32;    
+	shadow1[0] = 0.32;
 	shadow1[1] = -0.19;
 	shadow1[2] = 0.0;
-
 	afterWaypoint = false;
-	
 	state = 0;
 }
 
@@ -33,7 +30,7 @@ void goToTarget(float target[]){
     	    for(int i = 0; i < 3; i++){
     	        V1p[i] = V1[i] * lambda;
     	    }
-    	    mathVecSubtract(V3, V2, V1p, 3); 
+    	    mathVecSubtract(V3, V2, V1p, 3);
     	    if(mathVecMagnitude(V3,3) < 0.31){
     	        for(int i = 0; i < 3; i++){
         	        if(V3[i] >= 0){
