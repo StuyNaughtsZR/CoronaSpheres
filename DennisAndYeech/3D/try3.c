@@ -8,20 +8,19 @@ void init() {
 
 	solarFlareBegin = 1000; //Just to make the solar storm evasion code neater
 	
-	// test mathVecRotate
-	float blah[3][3], k[3];
-	k[0] = 0.; k[1] = 0.; k[2] = 1.;
-	mathVecRotate(blah, k, 1.57079633);
-    DEBUG(("{{%f, %f, %f}, {%f, %f, %f}, {%f, %f, %f}}", blah[0][0], blah[0][1], blah[0][2], blah[1][0], blah[1][1], blah[1][2], blah[2][0], blah[2][1], blah[2][2]));
+	// demonstration of mathVecRotate
+	//float blah[3][3], k[3];
+	//k[0] = 0.; k[1] = 0.; k[2] = 1.;
+	//mathVecRotate(blah, k, 1.57079633);
+    //DEBUG(("{{%f, %f, %f}, {%f, %f, %f}, {%f, %f, %f}}", blah[0][0], blah[0][1], blah[0][2], blah[1][0], blah[1][1], blah[1][2], blah[2][0], blah[2][1], blah[2][2]));
     
-    //test calcNewTarget
-    //me = {{0, 0.4 / sqrtf(2), 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}
-    for (int i = 0; i < 12; i++) me[i] = 0;
-    me[1] = 0.4 / sqrtf(2);
-    float newTarget[3];
-    float target[3] = {1, -1, 0};
-    calcNewTarget(newTarget, target);
-    DEBUG(("{%f, %f, %f}", newTarget[0], newTarget[1], newTarget[2]));
+    // demonstration of calcNewTarget
+    //float newTarget[3], target[3] = {-.2, -.2, .2};
+    //for (int i = 0; i < 12; i++) (i == 1) ? me[i] = 0.6 : me[i] = 0.;
+    //DEBUG(("me = {%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f}\n", me[0], me[1], me[2], me[3], me[4], me[5], me[6], me[7], me[8], me[9], me[10], me[11]));
+    //DEBUG(("minDistanceFromAsteroid = %f\n", minDistanceFromAsteroid(target)));
+    //calcNewTarget(newTarget, target);
+    //DEBUG(("newTarget = {%f, %f, %f}\n", newTarget[0], newTarget[1], newTarget[2]));
     
 }
 
@@ -229,13 +228,16 @@ float minDistanceFromAsteroid(float target[]) {
 }
 
 void calcNewTarget(float newTarget[], float target[]) {
-    float mag, Me[3], meToTarget[3], normal[3], theta, rotationMatrix[3][3], test1[3], test2[3];
+    float magMe, Me[3], meToTarget[3], normal[3], magNormal, theta, rotationMatrix[3][3], test1[3], test2[3];
     for (int i = 0; i < 3; i++) Me[i] = me[i];
-    mag = mathVecMagnitude(Me, 3);
+    magMe = mathVecMagnitude(Me, 3);
     mathVecSubtract(meToTarget, target, Me, 3);
     mathVecCross(normal, Me, meToTarget);
     // normal to the plane containing Me, target, and origin
-    theta = asinf(0.315 / mag);
+    magNormal = mathVecMagnitude(normal, 3);
+    for (int i = 0; i < 3; i++) normal[i] /= magNormal;
+    // normalize the normal
+    theta = asinf(0.315 / magMe);
     // angle between the position vectors to Me and either of the points of tangency
     mathVecRotate(rotationMatrix, normal, theta);
     // creates the rotation matrix about the normal by an angle of theta
@@ -247,27 +249,27 @@ void calcNewTarget(float newTarget[], float target[]) {
     // rotates Me so that it becomes the position vector to the other point of tangency
     if (distance(test1, target) < distance(test2, target)) {
         // if test1 is closer to the target
-        for (int i = 0; i < 3; i++) newTarget[i] = test1[i] / mag * 0.335;
+        for (int i = 0; i < 3; i++) newTarget[i] = test1[i] / 0.315 * 0.325;
     }
     else {
         // if test2 is closer to the target
-        for (int i = 0; i < 3; i++) newTarget[i] = test2[i] / mag * 0.335;
+        for (int i = 0; i < 3; i++) newTarget[i] = test2[i] / 0.315 * 0.325;
     }
 }
 
 void setPositionTarget(float target[]) {
-    if (distance(me, target) < 0.05) {
+    if (distance(me, target) < 0.01) {
         api.setPositionTarget(target);
-        DEBUG(("The swagiest function ever returned true.\n"));
+        DEBUG(("I'm here!\n"));
     }
     else if (minDistanceFromAsteroid(target) > 0.314) {
         api.setPositionTarget(target);
-        DEBUG(("The swagiest function ever returned true.\n"));
+        DEBUG(("target = <%f, %f, %f\n", target[0], target[1], target[2]));
     }
     else {
         float newTarget[3];
         calcNewTarget(newTarget, target);
         api.setPositionTarget(newTarget);
-        DEBUG(("The swagiest function ever returned false.\n"));
+        DEBUG(("target = <%f, %f, %f\n", newTarget[0], newTarget[1], newTarget[2]));
     }
 }
