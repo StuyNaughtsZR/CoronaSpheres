@@ -42,9 +42,14 @@ void goToNoCollision(ZRState start , float end[3] , float currSpeed[3] , float l
 		4) 2 states: Before waypoint and After waypoint
 	*/
 	//START DENOTES YOUR LOCATION!!!
-	//crt waypoint 1 #netlogo
+	//Create center of circle:
 	float center[3];
 	for(int i = 0; i < 3; i++){
 		center[i] = (start[i] + end[3]) / 2;
 	}
+	/*
+		Since the center of the circle we created is always the midpoint of the previous 2 lines, we have to figure out which direction to go wrt origin
+		Using quadrants, if both are in the same quadrant, use goToLoc instead.
+
+	*/
 }
