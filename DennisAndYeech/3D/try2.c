@@ -58,7 +58,7 @@ void loop() {
 			DEBUG(("POI Coors = %f,%f,%f\n",POI[0],POI[1],POI[2]));
 
 			for (int i = 0; i < 3; i++) {
-				brakingPos[i] = POI[i] * 2.0; //1.5625; <- let's try the outer zone
+				brakingPos[i] = POI[i] * 1.6; //1.5625; <- let's try the outer zone
 			}
 			
 			state = 1;
@@ -110,11 +110,14 @@ void loop() {
                 game.takePic(POIID);
 			}
 
+			break;
+
 		case 4: // Upload the picture
 			if (velocity(me) < 0.01 && distance(me,uploadPos) < 0.05) {
 				game.uploadPic();
 				DEBUG(("I just uploaded %d picture(s).\n", picNum));
 				DEBUG(("I am in state %d.\n", state)); //Why the f**k does it say it's in State 3???
+				// B/c ding-dongs forgot to type "break;"
 				state = 0;
 			}
 			else {
@@ -184,18 +187,22 @@ void setPositionTarget(float target[]) {
 		}
 
 		mathVecSubtract(fakePath,mePrep,myPos,3);
+		
+		for (int i = 0; i < 3; i++) {
+		    mePrep[i] = -mePrep[i];
+		}
 
 		mathVecProject(proj2,mePrep,fakePath,3);
-		
-		mathVecAdd(temp,mePrep,proj2,3);
+
+		mathVecSubtract(temp,proj2,mePrep,3);
 
 		mathVecNormalize(temp,3);
 
 		for (int i = 0; i < 3; i++) {
-			temp[i] = tangentPt[i];
+		    tangentPt[i] = temp[i] * 0.32;
 		}
 
-		mathVecAdd(path,myPos,tangentPt,3);
+		mathVecSubtract(path,tangentPt,myPos,3);
 
 		for (int i = 0; i < 3; i++) {
 			temp[i] = path[i] * 3;
@@ -229,5 +236,3 @@ float minDistanceFromAsteroid(float target[3]){
 
 	return mathVecMagnitude(dis,3);
 }
-
-
