@@ -179,36 +179,21 @@ void setPositionTarget(float target[]) {
 	}
 	
 	else {
-		float opposite[3], perpendicular[3], mePrep[3],proj2[3],fakePath[3],tangentPt[3],temp[3],path[3];
+		float meMag, opposite[3], perpendicular[3], mePrep[3];
+		
+		meMag = mathVecMagnitude(myPos,3);
+		
 		mathVecProject(opposite,target,myPos,3);
 		mathVecSubtract(perpendicular,target,opposite,3);
 		for (int i = 0; i < 3; i++) {
-			mePrep[i] = mathVecMagnitude(myPos,3) * perpendicular[i] / mathVecMagnitude(perpendicular,3);;
+			mePrep[i] = perpendicular[i] / mathVecMagnitude(perpendicular,3);
 		}
-
-		mathVecSubtract(fakePath,mePrep,myPos,3);
 		
-		for (int i = 0; i < 3; i++) {
-		    mePrep[i] = -mePrep[i];
+		for (int i = 0; i < 3, i++) {
+			mePrep[i] = (mePrep[i] * 0.32 * 2  * meMag) / (sqrtf(meMag*meMag - 0.32*0.32));
 		}
 
-		mathVecProject(proj2,mePrep,fakePath,3);
-
-		mathVecSubtract(temp,proj2,mePrep,3);
-
-		mathVecNormalize(temp,3);
-
-		for (int i = 0; i < 3; i++) {
-		    tangentPt[i] = temp[i] * 0.32;
-		}
-
-		mathVecSubtract(path,tangentPt,myPos,3);
-
-		for (int i = 0; i < 3; i++) {
-			temp[i] = path[i] * 3;
-		}
-
-		api.setPositionTarget(temp);
+		api.setPositionTarget(mePrep);
 	}
 }
 
