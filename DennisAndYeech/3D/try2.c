@@ -67,7 +67,7 @@ void loop() {
 		case 1: // Orbit Function here
 			if (AreWeThereYet(brakingPos,0.01,0.01)) state = 2;
 			else {
-				setPositionTarget(brakingPos);
+				setPositionTarget(brakingPos,0.32);
 			    mathVecSubtract(facing,POI,me,3);
 			    mathVecNormalize(facing,3);
 			    api.setAttitudeTarget(facing);
@@ -75,7 +75,7 @@ void loop() {
 			break;
 
 		case 2: // First Pic in inner Zone
-			setPositionTarget(brakingPos);
+			setPositionTarget(brakingPos, 0.32);
 			mathVecSubtract(facing,POI,me,3);
 			mathVecNormalize(facing,3);
 			api.setAttitudeTarget(facing);
@@ -84,7 +84,7 @@ void loop() {
 			if (picNum > 0) {
 				DEBUG(("%d picture(s) have been taken\n", picNum));
 				uploadCalc(uploadPos,me);
-				setPositionTarget(uploadPos);
+				setPositionTarget(uploadPos, 0.32);
 				state = 3;
 			}
 			break;
@@ -97,12 +97,12 @@ void loop() {
 			if (picNum > 1) {
 				DEBUG(("%d picture(s) have been taken.\n", picNum));
 				uploadCalc(uploadPos,me);
-				setPositionTarget(uploadPos);
+				setPositionTarget(uploadPos,0.32);
 				state = 4;
 			}
 			
 			else {
-				setPositionTarget(brakingPos);
+				setPositionTarget(brakingPos,0.32);
 			    mathVecSubtract(facing,POI,me,3);
 			    mathVecNormalize(facing,3);
 			    api.setAttitudeTarget(facing);
@@ -126,7 +126,7 @@ void loop() {
 				mathVecNormalize(facing,3);
 				api.setAttitudeTarget(facing);
 
-				api.setPositionTarget(uploadPos);
+				api.setPositionTarget(uploadPos,0.32);
 				game.takePic(POIID);
 			}
 
@@ -165,7 +165,7 @@ void mathVecProject(float c[], float a[], float b[], int n) {
     }
 }
 
-void setPositionTarget(float target[]) {
+void setPositionTarget(float target[],float r) {
 	ZRState me;
 	api.getMyZRState(me);
 	float myPos[3];
@@ -174,7 +174,7 @@ void setPositionTarget(float target[]) {
 		myPos[i] = me[i];
 	}
 
-	if (minDistanceFromAsteroid(target) > 0.32) {
+	if (minDistanceFromAsteroid(target) > r) {
 		api.setPositionTarget(target);
 	}
 	
@@ -190,7 +190,7 @@ void setPositionTarget(float target[]) {
 		}
 		
 		for (int i = 0; i < 3, i++) {
-			mePrep[i] = (mePrep[i] * 0.32 * 2  * meMag) / (sqrtf(meMag*meMag - 0.32*0.32));
+			mePrep[i] = (mePrep[i] * r * 2  * meMag) / (sqrtf(meMag*meMag - r*r));
 		}
 
 		api.setPositionTarget(mePrep);
