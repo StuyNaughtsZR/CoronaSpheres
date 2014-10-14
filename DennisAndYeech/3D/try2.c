@@ -168,20 +168,39 @@ void mathVecProject(float c[], float a[], float b[], int n) {
 void setPositionTarget(float target[3]) {
 	ZRState me;
 	api.getMyZRState(me);
-	float myPos[3];
+	
+	float myPos[3],meMag,zero[3],cross[3];
 	
 	for(int i = 0; i < 3; i++) {
 		myPos[i] = me[i];
+		zero[i] = 0.0;
 	}
+	
+	meMag = mathVecMagnitude(myPos,3);
+	
+	mathVecCross(cross,myPos,target);
 
 	if (minDistanceFromAsteroid(target) > 0.32) {
 		api.setPositionTarget(target);
 	}
 	
-	else {
-		float meMag, opposite[3], perpendicular[3], mePrep[3];
+	else if (meMag == 0.32) {
+		for (int i = 0; i < 3; i++) {
+			myPos[i] = myPos[i] * 1.6;
+		}
 		
-		meMag = mathVecMagnitude(myPos,3);
+		api.setPositionTarget(myPos);
+	}
+	
+	else if (mathVecMagnitude(cross,3) == 0) {
+		api.setPositionTarget(myPos);
+		DEBUG(("COLLINEARITY DETECTED"));
+	}
+	
+	else {
+		float opposite[3], perpendicular[3], mePrep[3];
+		
+		
 		
 		mathVecProject(opposite,target,myPos,3);
 		mathVecSubtract(perpendicular,target,opposite,3);
