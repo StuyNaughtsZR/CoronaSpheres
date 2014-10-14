@@ -30,6 +30,17 @@ void goToLoc(ZRState state, float dest[3], float smoothness){
 	api.setVelocityTarget(val);
 }
 
+int setPosTarg(float dst[3], float maxdist, float maxvel, ZRState state){
+    goToLoc(state, dst, 0.25);
+    if (dist(state , dst) <= maxdist) {
+        //STOPPPP
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}
+
 // CoronaSpheres specific commands:
 //Put /* */ around if not using
 
@@ -45,6 +56,7 @@ void goToNoCollision(ZRState start , float end[3] , float currSpeed[3] , float l
 	//crt waypoint 1 #netlogo
 	float center[3];
 	for(int i = 0; i < 3; i++){
-		center[i] = (start[i] + end[3]) / 2;
+		center[i] = (start[i] + end[i]) / 2;
 	}
+	
 }
