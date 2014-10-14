@@ -79,40 +79,43 @@ void loop() {
 			mathVecSubtract(facing,POI,me,3);
 			mathVecNormalize(facing,3);
 			api.setAttitudeTarget(facing);
-            game.takePic(POIID);
+            		game.takePic(POIID);
 
 			if (picNum > 0) {
 				DEBUG(("%d picture(s) have been taken\n", picNum));
-				uploadCalc(uploadPos,me);
-				api.setPositionTarget(uploadPos);
-				state = 4;//3; <- otherwise divide by 0, i'll fix this later
+				state = 3;
 			}
 			break;
 
-		case 3: // Taking pic in outer zone
+		case 3: // Moving to outer zone
 			for (int i = 0; i < 3; i++) {
 				brakingPos[i] = POI[i] * 2.5;
 			}
 			
-			if (picNum > 1) {
-				DEBUG(("%d picture(s) have been taken.\n", picNum));
-				uploadCalc(uploadPos,me);
-				api.setPositionTarget(uploadPos);
-				state = 4;
-			}
-			
+			if (AreWeThereYet(brakingPos,0.01,0.01)) state = 4;
 			else {
-			    setPositionTarget(brakingPos);
+			    api.setPositionTarget(brakingPos);
 			    mathVecSubtract(facing,POI,me,3);
 			    mathVecNormalize(facing,3);
 			    api.setAttitudeTarget(facing);
-        		game.takePic(POIID);
-                game.takePic(POIID);
+			    game.takePic(POIID);
 			}
+			break;
+		
+		case 4: //Taking pic in outer zone
+			api.setPositionTarget(brakingPos);
+			mathVecSubtract(facing,POI,me,3);
+			mathVecNormalize(facing,3);
+			api.setAttitudeTarget(facing);
+            		game.takePic(POIID);
 
+			if (picNum > 1) {
+				DEBUG(("%d picture(s) have been taken\n", picNum));
+				state = 5;
+			}
 			break;
 
-		case 4: // Upload the picture
+		case 5: // Upload the picture
 			if (velocity(me) < 0.01 && distance(me,uploadPos) < 0.05) {
 				game.uploadPic();
 				DEBUG(("I just uploaded %d picture(s).\n", picNum));
@@ -169,7 +172,7 @@ void setPositionTarget(float target[3]) {
 	ZRState me;
 	api.getMyZRState(me);
 	
-	float myPos[3],meMag,zero[3],cross[3];
+	float myPos[3],meMag,zero[3],cross[3],inner;
 	
 	for(int i = 0; i < 3; i++) {
 		myPos[i] = me[i];
@@ -179,12 +182,13 @@ void setPositionTarget(float target[3]) {
 	meMag = mathVecMagnitude(myPos,3);
 	
 	mathVecCross(cross,myPos,target);
+	inner = mathVecInner(myPos,target,3);
 
 	if (minDistanceFromAsteroid(target) > 0.32) {
 		api.setPositionTarget(target);
 	}
 	
-	else if (meMag == 0.32) {
+	else if (meMag >= 0.22 && meMag <= 0.32) {
 		for (int i = 0; i < 3; i++) {
 			myPos[i] = myPos[i] * 1.6;
 		}
@@ -193,9 +197,14 @@ void setPositionTarget(float target[3]) {
 		DEBUG(("TOO CLOSE"));
 	}
 	
-	else if (mathVecMagnitude(cross,3) == 0) {
+	else if (mathVecMagnitude(cross,3) < 0.01 && inner > 0.99 && inner < 1.01) {
+		api.setPositionTarget(target);
+		DEBUG(("GOOD COLLINEARITY DETECTED"));
+	}
+	
+	else if (mathVecMagnitude(cross,3) < 0.01 && inner < -0.99 && inner > -1.01) {
 		api.setPositionTarget(myPos);
-		DEBUG(("COLLINEARITY DETECTED"));
+		DEBUG(("BAD COLLINEARITY DETECTED"));
 	}
 	
 	else {
