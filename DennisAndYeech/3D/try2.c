@@ -190,6 +190,7 @@ void setPositionTarget(float target[3]) {
 		}
 		
 		api.setPositionTarget(myPos);
+		DEBUG(("TOO CLOSE"));
 	}
 	
 	else if (mathVecMagnitude(cross,3) == 0) {
