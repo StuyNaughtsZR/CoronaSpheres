@@ -240,7 +240,7 @@ void mathVecRotate(float c[][3], float axis[], float theta) {
 
 float minDistanceFromOrigin(float target[]) {
 	float proj[3], meToTarget[3], testPoint[3];
-    if ((mathVecMagnitude(me, 3) * mathVecMagnitude + mathVecMagnitude(meToTarget, 3) * mathVecMagnitude(meToTarget, 3) - mathVecMagnitude(target, 3) * mathVecMagnitude(target, 3)) / (2 * mathVecMagnitude(me, 3) * mathVecMagnitude(meToTarget, 3)) < 0) return 10;
+    if ((mathVecMagnitude(me, 3) * mathVecMagnitude(me, 3) + mathVecMagnitude(meToTarget, 3) * mathVecMagnitude(meToTarget, 3) - mathVecMagnitude(target, 3) * mathVecMagnitude(target, 3)) / (2 * mathVecMagnitude(me, 3) * mathVecMagnitude(meToTarget, 3)) < 0) return 10;
     mathVecSubtract(meToTarget, target, me, 3);
     mathVecProject(proj, me, meToTarget, 3);
     mathVecSubtract(testPoint, me, proj, 3);
@@ -290,6 +290,7 @@ void haulAssTowardTarget(float target[], float scalar) {
 void setPositionTarget(float Target[]) {
     float target[3];
     for (int i = 0; i < 3; i++) target[i] = Target[i]; // allows input of ZRStates
+    DEBUG(("YO!  minDistanceFromOrigin = %f\n", minDistanceFromOrigin(target)));
     if (distance(me, target) < 0.05) {
         api.setPositionTarget(target);
         DEBUG(("I'm here!\n"));
