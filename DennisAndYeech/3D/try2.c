@@ -58,7 +58,7 @@ void loop() {
 			DEBUG(("POI Coors = %f,%f,%f\n",POI[0],POI[1],POI[2]));
 
 			for (int i = 0; i < 3; i++) {
-				brakingPos[i] = POI[i] * 1.6; //1.5625; <- let's try the outer zone
+				brakingPos[i] = POI[i] * 2.0; //1.5625; <- let's try the outer zone
 			}
 			
 			state = 1;
@@ -67,7 +67,7 @@ void loop() {
 		case 1: // Orbit Function here
 			if (AreWeThereYet(brakingPos,0.01,0.01)) state = 2;
 			else {
-				setPositionTarget(brakingPos,0.32);
+			    setPositionTarget(brakingPos);
 			    mathVecSubtract(facing,POI,me,3);
 			    mathVecNormalize(facing,3);
 			    api.setAttitudeTarget(facing);
@@ -75,7 +75,7 @@ void loop() {
 			break;
 
 		case 2: // First Pic in inner Zone
-			setPositionTarget(brakingPos, 0.32);
+			setPositionTarget(brakingPos);
 			mathVecSubtract(facing,POI,me,3);
 			mathVecNormalize(facing,3);
 			api.setAttitudeTarget(facing);
@@ -84,8 +84,8 @@ void loop() {
 			if (picNum > 0) {
 				DEBUG(("%d picture(s) have been taken\n", picNum));
 				uploadCalc(uploadPos,me);
-				setPositionTarget(uploadPos, 0.32);
-				state = 3;
+				api.setPositionTarget(uploadPos);
+				state = 4;//3; <- otherwise divide by 0, i'll fix this later
 			}
 			break;
 
@@ -97,16 +97,16 @@ void loop() {
 			if (picNum > 1) {
 				DEBUG(("%d picture(s) have been taken.\n", picNum));
 				uploadCalc(uploadPos,me);
-				setPositionTarget(uploadPos,0.32);
+				api.setPositionTarget(uploadPos);
 				state = 4;
 			}
 			
 			else {
-				setPositionTarget(brakingPos,0.32);
+			    setPositionTarget(brakingPos);
 			    mathVecSubtract(facing,POI,me,3);
 			    mathVecNormalize(facing,3);
 			    api.setAttitudeTarget(facing);
-                game.takePic(POIID);
+        		game.takePic(POIID);
                 game.takePic(POIID);
 			}
 
@@ -126,7 +126,7 @@ void loop() {
 				mathVecNormalize(facing,3);
 				api.setAttitudeTarget(facing);
 
-				api.setPositionTarget(uploadPos,0.32);
+				api.setPositionTarget(uploadPos);
 				game.takePic(POIID);
 			}
 
@@ -165,7 +165,7 @@ void mathVecProject(float c[], float a[], float b[], int n) {
     }
 }
 
-void setPositionTarget(float target[],float r) {
+void setPositionTarget(float target[3]) {
 	ZRState me;
 	api.getMyZRState(me);
 	float myPos[3];
@@ -174,7 +174,7 @@ void setPositionTarget(float target[],float r) {
 		myPos[i] = me[i];
 	}
 
-	if (minDistanceFromAsteroid(target) > r) {
+	if (minDistanceFromAsteroid(target) > 0.32) {
 		api.setPositionTarget(target);
 	}
 	
@@ -185,12 +185,13 @@ void setPositionTarget(float target[],float r) {
 		
 		mathVecProject(opposite,target,myPos,3);
 		mathVecSubtract(perpendicular,target,opposite,3);
+		
 		for (int i = 0; i < 3; i++) {
-			mePrep[i] = perpendicular[i] / mathVecMagnitude(perpendicular,3);
+		    mePrep[i] = perpendicular[i] / mathVecMagnitude(perpendicular,3);
 		}
 		
-		for (int i = 0; i < 3, i++) {
-			mePrep[i] = (mePrep[i] * r * 2  * meMag) / (sqrtf(meMag*meMag - r*r));
+		for (int i = 0; i < 3; i++) {
+			mePrep[i] = (mePrep[i] * 0.32 * 2 * meMag) / (sqrtf(meMag*meMag - 0.32*0.32));
 		}
 
 		api.setPositionTarget(mePrep);
