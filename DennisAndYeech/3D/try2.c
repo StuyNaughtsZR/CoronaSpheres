@@ -67,7 +67,7 @@ void loop() {
 		case 1: // Orbit Function here
 			if (AreWeThereYet(brakingPos,0.01,0.01)) state = 2;
 			else {
-				setPositionTarget(brakingPos);
+			    setPositionTarget(brakingPos);
 			    mathVecSubtract(facing,POI,me,3);
 			    mathVecNormalize(facing,3);
 			    api.setAttitudeTarget(facing);
@@ -79,42 +79,48 @@ void loop() {
 			mathVecSubtract(facing,POI,me,3);
 			mathVecNormalize(facing,3);
 			api.setAttitudeTarget(facing);
-            game.takePic(POIID);
+            		game.takePic(POIID);
 
 			if (picNum > 0) {
 				DEBUG(("%d picture(s) have been taken\n", picNum));
-				uploadCalc(uploadPos,me);
-				setPositionTarget(uploadPos);
 				state = 3;
 			}
 			break;
 
-		case 3: // Taking pic in outer zone
+		case 3: // Moving to outer zone
 			for (int i = 0; i < 3; i++) {
 				brakingPos[i] = POI[i] * 2.5;
 			}
 			
-			if (picNum > 1) {
-				DEBUG(("%d picture(s) have been taken.\n", picNum));
-				uploadCalc(uploadPos,me);
-				setPositionTarget(uploadPos);
-				state = 4;
-			}
-			
+			if (AreWeThereYet(brakingPos,0.01,0.01)) state = 4;
 			else {
-				setPositionTarget(brakingPos);
+			    api.setPositionTarget(brakingPos);
 			    mathVecSubtract(facing,POI,me,3);
 			    mathVecNormalize(facing,3);
 			    api.setAttitudeTarget(facing);
-                game.takePic(POIID);
-                game.takePic(POIID);
+			    game.takePic(POIID);
 			}
+			break;
+		
+		case 4: //Taking pic in outer zone
+			api.setPositionTarget(brakingPos);
+			mathVecSubtract(facing,POI,me,3);
+			mathVecNormalize(facing,3);
+			api.setAttitudeTarget(facing);
+            		game.takePic(POIID);
 
-		case 4: // Upload the picture
+			if (picNum > 1) {
+				DEBUG(("%d picture(s) have been taken\n", picNum));
+				state = 5;
+			}
+			break;
+
+		case 5: // Upload the picture
 			if (velocity(me) < 0.01 && distance(me,uploadPos) < 0.05) {
 				game.uploadPic();
 				DEBUG(("I just uploaded %d picture(s).\n", picNum));
 				DEBUG(("I am in state %d.\n", state)); //Why the f**k does it say it's in State 3???
+				// B/c ding-dongs forgot to type "break;"
 				state = 0;
 			}
 			else {
@@ -162,46 +168,62 @@ void mathVecProject(float c[], float a[], float b[], int n) {
     }
 }
 
-void setPositionTarget(float target[]) {
+void setPositionTarget(float target[3]) {
 	ZRState me;
 	api.getMyZRState(me);
-	float myPos[3];
+	
+	float myPos[3],meMag,zero[3],cross[3],inner;
 	
 	for(int i = 0; i < 3; i++) {
 		myPos[i] = me[i];
+		zero[i] = 0.0;
 	}
+	
+	meMag = mathVecMagnitude(myPos,3);
+	
+	mathVecCross(cross,myPos,target);
+	inner = mathVecInner(myPos,target,3);
 
 	if (minDistanceFromAsteroid(target) > 0.32) {
 		api.setPositionTarget(target);
 	}
 	
+	else if (meMag >= 0.22 && meMag <= 0.32) {
+		for (int i = 0; i < 3; i++) {
+			myPos[i] = myPos[i] * 1.6;
+		}
+		
+		api.setPositionTarget(myPos);
+		DEBUG(("TOO CLOSE"));
+	}
+	
+	else if (mathVecMagnitude(cross,3) < 0.01 && inner > 0.99 && inner < 1.01) {
+		api.setPositionTarget(target);
+		DEBUG(("GOOD COLLINEARITY DETECTED"));
+	}
+	
+	else if (mathVecMagnitude(cross,3) < 0.01 && inner < -0.99 && inner > -1.01) {
+		api.setPositionTarget(myPos);
+		DEBUG(("BAD COLLINEARITY DETECTED"));
+	}
+	
 	else {
-		float opposite[3], perpendicular[3], mePrep[3],proj2[3],fakePath[3],tangentPt[3],temp[3],path[3];
+		float opposite[3], perpendicular[3], mePrep[3];
+		
+		
+		
 		mathVecProject(opposite,target,myPos,3);
 		mathVecSubtract(perpendicular,target,opposite,3);
-		for (int i = 0; i < 3; i++) {
-			mePrep[i] = mathVecMagnitude(myPos,3) * perpendicular[i] / mathVecMagnitude(perpendicular,3);;
-		}
-
-		mathVecSubtract(fakePath,mePrep,myPos,3);
-
-		mathVecProject(proj2,mePrep,fakePath,3);
 		
-		mathVecAdd(temp,mePrep,proj2,3);
-
-		mathVecNormalize(temp,3);
-
 		for (int i = 0; i < 3; i++) {
-			temp[i] = tangentPt[i];
+		    mePrep[i] = perpendicular[i] / mathVecMagnitude(perpendicular,3);
+		}
+		
+		for (int i = 0; i < 3; i++) {
+			mePrep[i] = (mePrep[i] * 0.32 * 2 * meMag) / (sqrtf(meMag*meMag - 0.32*0.32));
 		}
 
-		mathVecAdd(path,myPos,tangentPt,3);
-
-		for (int i = 0; i < 3; i++) {
-			temp[i] = path[i] * 3;
-		}
-
-		api.setPositionTarget(temp);
+		api.setPositionTarget(mePrep);
 	}
 }
 
@@ -229,5 +251,3 @@ float minDistanceFromAsteroid(float target[3]){
 
 	return mathVecMagnitude(dis,3);
 }
-
-
