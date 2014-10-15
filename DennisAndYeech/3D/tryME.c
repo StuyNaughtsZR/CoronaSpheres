@@ -13,13 +13,6 @@ void init() {
 
 	solarFlareBegin = 1000; //Just to make the solar storm evasion code neater
 	
-	// apparently mathVecCross is chill with inputs of any size
-	//float i[2]= {1, 0};
-	//float j[5]= {0, 1, 0, 0, 0};
-	//float k[3];
-	//mathVecCross(k, i, j);
-	//DEBUG(("YO! k = <%f,%f,%f>\n", k[0], k[1], k[2]));
-	
 	// demonstration of mathVecRotate
 	// creates the matrix for a rotation of pi/2 in the xy-plane
 	//float blah[3][3], k[3];
@@ -40,8 +33,10 @@ void init() {
 void loop() {
     
     api.getMyZRState(me);
+    POI[0] = 0; POI[1] = -.3; POI[2] = 0; 
+    setPositionTarget(POI);
 
-	if(api.getTime() % 60 == 0 && state != 4) state = 0;
+	/*if(api.getTime() % 60 == 0 && state != 4) state = 0;
 	
 	DEBUG(("State = %d\n", state));
 
@@ -127,7 +122,7 @@ void loop() {
 				for (int i = 0; i < 3; i++) {
 	                uploadPos[i] = me[i] / mathVecMagnitude(me, 3) * 0.6;
 	            }
-				setPositionTarget(uploadPos);
+				api.setPositionTarget(uploadPos);
 				state = 4;
 			}
 			
@@ -157,7 +152,7 @@ void loop() {
 
 			break;
 			
-	}
+	}*/
 	
 	
     if (api.getTime() >= (solarFlareBegin - 3)) {
@@ -240,7 +235,15 @@ void mathVecRotate(float c[][3], float axis[], float theta) {
 
 float minDistanceFromOrigin(float target[]) {
 	float proj[3], meToTarget[3], testPoint[3];
-    if ((mathVecMagnitude(me, 3) * mathVecMagnitude(me, 3) + mathVecMagnitude(meToTarget, 3) * mathVecMagnitude(meToTarget, 3) - mathVecMagnitude(target, 3) * mathVecMagnitude(target, 3)) / (2 * mathVecMagnitude(me, 3) * mathVecMagnitude(meToTarget, 3)) < 0) return 10;
+    if ((mathVecMagnitude(me, 3) * mathVecMagnitude(me, 3) +
+    mathVecMagnitude(meToTarget, 3) * mathVecMagnitude(meToTarget, 3) -
+    mathVecMagnitude(target, 3) * mathVecMagnitude(target, 3)) /
+    (2 * mathVecMagnitude(me, 3) * mathVecMagnitude(meToTarget, 3)) < 0) return 10;
+    if ((mathVecMagnitude(target, 3) * mathVecMagnitude(target, 3) +
+    mathVecMagnitude(meToTarget, 3) * mathVecMagnitude(meToTarget, 3) -
+    mathVecMagnitude(me, 3) * mathVecMagnitude(me, 3)) /
+    (2 * mathVecMagnitude(target, 3) * mathVecMagnitude(meToTarget, 3)) < 0) return 10;
+    // if ∠ target me origin or ∠ me target origin is obtuse, return 10
     mathVecSubtract(meToTarget, target, me, 3);
     mathVecProject(proj, me, meToTarget, 3);
     mathVecSubtract(testPoint, me, proj, 3);
@@ -255,9 +258,9 @@ void calcNewTarget(float newTarget[], float target[]) {
     // normal to the plane containing Me, target, and origin
     mathVecNormalize(normal, 3);
     // normalize the normal
-    theta = asinf((0.33 - minDistanceFromOrigin(target)) / sqrtf(magMe * magMe - 0.33 * 0.33));
+    theta = atanf((0.33 - minDistanceFromOrigin(target)) / sqrtf(magMe * magMe - 0.33 * 0.33));
     // angle between meToTarget and "me to tangent point"
-    DEBUG(("theta = %f radians\n", theta)); // THIS IS THE ERROR!!!
+    DEBUG(("theta = %f radians\n", theta));
     mathVecRotate(rotationMatrix, normal, theta);
     DEBUG(("rotationMatrix = {{%f, %f, %f}, {%f, %f, %f}, {%f, %f, %f}}\n", 
     rotationMatrix[0][0], rotationMatrix[0][1], rotationMatrix[0][2], 
@@ -287,22 +290,27 @@ void haulAssTowardTarget(float target[], float scalar) {
 	api.setPositionTarget(scaledTarget);
 }
 
-void setPositionTarget(float Target[]) {
+int setPositionTarget(float Target[]) {
     float target[3];
     for (int i = 0; i < 3; i++) target[i] = Target[i]; // allows input of ZRStates
-    DEBUG(("YO!  minDistanceFromOrigin = %f\n", minDistanceFromOrigin(target)));
-    if (distance(me, target) < 0.05) {
-        api.setPositionTarget(target);
+    if (distance(me, target) < 0.01) {
+        //api.setPositionTarget(target);
         DEBUG(("I'm here!\n"));
+        return 1;
     } // prevents a divide-by-0 error
     else if (minDistanceFromOrigin(target) > 0.32) {
         api.setPositionTarget(target);
+        DEBUG(("YO!  minDistanceFromOrigin = %f\n", minDistanceFromOrigin(target)));
         DEBUG(("target = <%f, %f, %f>\n", target[0], target[1], target[2]));
+        return 0;
     } // if it's a straight shot, go for it
     else {
         float newTarget[3];
         calcNewTarget(newTarget, target);
         api.setPositionTarget(newTarget);
-        DEBUG(("target = <%f, %f, %f>\n", newTarget[0], newTarget[1], newTarget[2]));
+        DEBUG(("YO!  minDistanceFromOrigin = %f\n", minDistanceFromOrigin(target)));
+        DEBUG(("oldTarget = <%f, %f, %f>\n", target[0], target[1], target[2]));
+        DEBUG(("newTarget = <%f, %f, %f>\n", newTarget[0], newTarget[1], newTarget[2]));
+        return 0;
     } 
 }
