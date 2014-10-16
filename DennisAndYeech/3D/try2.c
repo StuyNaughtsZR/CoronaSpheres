@@ -3,7 +3,7 @@
 
 ZRState me;
 int state, POIID, picNum, solarFlareBegin;
-float POI[3],otherPOI[3],brakingPos[3],facing[3],uploadPos[3];
+float POI[3],otherPOI[3],brakingPos[3],newBrakingPos[3],facing[3],uploadPos[3];
 
 void init() {
 
@@ -79,7 +79,7 @@ void loop() {
 			mathVecSubtract(facing,POI,me,3);
 			mathVecNormalize(facing,3);
 			api.setAttitudeTarget(facing);
-            		game.takePic(POIID);
+            game.takePic(POIID);
 
 			if (picNum > 0) {
 				DEBUG(("%d picture(s) have been taken\n", picNum));
@@ -89,12 +89,12 @@ void loop() {
 
 		case 3: // Moving to outer zone
 			for (int i = 0; i < 3; i++) {
-				brakingPos[i] = POI[i] * 2.5;
+				newBrakingPos[i] = POI[i] * 2.5;
 			}
 			
-			if (AreWeThereYet(brakingPos,0.01,0.01)) state = 4;
+			if (AreWeThereYet(newBrakingPos,0.01,0.01)) state = 4;
 			else {
-			    api.setPositionTarget(brakingPos);
+			    api.setPositionTarget(newBrakingPos);
 			    mathVecSubtract(facing,POI,me,3);
 			    mathVecNormalize(facing,3);
 			    api.setAttitudeTarget(facing);
@@ -103,20 +103,22 @@ void loop() {
 			break;
 		
 		case 4: //Taking pic in outer zone
-			api.setPositionTarget(brakingPos);
+			api.setPositionTarget(newBrakingPos);
 			mathVecSubtract(facing,POI,me,3);
 			mathVecNormalize(facing,3);
 			api.setAttitudeTarget(facing);
-            		game.takePic(POIID);
+            game.takePic(POIID);
 
 			if (picNum > 1) {
 				DEBUG(("%d picture(s) have been taken\n", picNum));
+				uploadCalc(uploadPos,me);
+				api.setPositionTarget(uploadPos);
 				state = 5;
 			}
 			break;
 
 		case 5: // Upload the picture
-			if (velocity(me) < 0.01 && distance(me,uploadPos) < 0.05) {
+			if (AreWeThereYet(uploadPos)) {
 				game.uploadPic();
 				DEBUG(("I just uploaded %d picture(s).\n", picNum));
 				DEBUG(("I am in state %d.\n", state)); //Why the f**k does it say it's in State 3???
@@ -154,10 +156,10 @@ float velocity(float p1[]){
 	return sqrtf(d);
 }
 
-void uploadCalc(float uploadPos[], float me[]){
+void uploadCalc(float uploadPos[], float POI[]){
 	mathVecNormalize(me,3);
 	for (int i = 0; i < 3; i++) {
-		uploadPos[i] = me[i] * 0.6;
+		uploadPos[i] = me[i] * 0.55;
 	}
 }
 
