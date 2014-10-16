@@ -3,19 +3,19 @@
 
 ZRState me;
 int state, POIID, picNum, solarFlareBegin;
-float target1[3],target2[3],shadow[3],timei1,timef1,fueli2,fuelf2;
+float target1[3],target2[3],shadow[3],timei1,timef1,fueli1,fuelf1;
 
 void init() {
 
 	state = 0;
 
-	shadow[0] = 0.35;
-	shadow[1] = 0.1;
+	shadow[0] = 0.32;
+	shadow[1] = 0;
 	shadow[2] = 0;
 
 	target1[0] = -0.292;
 	target1[1] = -0.121;
-	target2[2] = 0;
+	target1[2] = 0;
 	
 	target2[0] = -0.43;
 	target2[1] = -0.146;
@@ -157,6 +157,8 @@ void loop() {
 	}
 	*/
 	
+	DEBUG(("STATE = %d\n", state));
+	
 	switch (state) {
 
 		case 0:
@@ -181,19 +183,23 @@ void loop() {
 				DEBUG(("TIME TOOK = %f \n FUEL TOOK = %f",timef1-timei1, fuelf1-fueli1));
 			state = 2;
 			}
+			
+			//break;
 
 		case 2:
-			timei = api.getTime();
-			fueli = game.getFuelRemaining();
+			timei1 = api.getTime();
+			fueli1 = game.getFuelRemaining();
 
 			setPositionTarget(target2);
 
 			if(AreWeThereYet(target2,0.05,0.05)) {
-				timef = api.getTime();
+				timef1 = api.getTime();
 				fuelf1 = game.getFuelRemaining();
 				DEBUG(("TIME TOOK = %f \n FUEL TOOK = %f",timef1-timei1, fuelf1-fueli1));
 
 			}
+			
+			//break;
 	}
 
 }
@@ -244,7 +250,7 @@ void setPositionTarget(float target[3]) {
 	mathVecCross(cross,myPos,target);
 	inner = mathVecInner(myPos,target,3);
 
-	if (minDistanceFromAsteroid(target) > 0.30) {
+	if (minDistanceFromOrigin(target) > 0.32) {
 		api.setPositionTarget(target);
 		DEBUG(("JUST GO!!!"));
 	}
@@ -305,18 +311,23 @@ int AreWeThereYet(float target[3], float maxDis, float maxSpeed) {
 }
 
 float minDistanceFromOrigin(float target[]) {
-	float proj[3], meToTarget[3], testPoint[3];
-    if ((mathVecMagnitude(me, 3) * mathVecMagnitude(me, 3) +
-    mathVecMagnitude(meToTarget, 3) * mathVecMagnitude(meToTarget, 3) -
-    mathVecMagnitude(target, 3) * mathVecMagnitude(target, 3)) /
-    (2 * mathVecMagnitude(me, 3) * mathVecMagnitude(ToTarget, 3)) < 0 || 
-	(mathVecMagnitude(target, 3) * mathVecMagnitude(target, 3) +
-    mathVecMagnitude(meToTarget, 3) * mathVecMagnitude(meToTarget, 3) -
-    mathVecMagnitude(me, 3) * mathVecMagnitude(me, 3)) /
-    (2 * mathVecMagnitude(target, 3) * mathVecMagnitude(meToTarget, 3)) < 0)
+	float proj[3], meToTarget[3], testPoint[3],meMag,targetMag,diffMag;
+	
+	mathVecSubtract(meToTarget, target, me, 3);
+	
+	meMag = mathVecMagnitude(me,3);
+	targetMag = mathVecMagnitude(target,3);
+	diffMag = mathVecMagnitude(meToTarget,3);
+	
+    	if (((meMag * meMag + diffMag * diffMag - targetMag * targetMag) / (2 * meMag * diffMag)) < 0 || 
+	((targetMag * targetMag + diffMag * diffMag - meMag * meMag) / (2 * targetMag * diffMag)) < 0) {
+		
 		return 10;    // if ∠ target me origin or ∠ me target origin is obtuse, return 10
-    mathVecSubtract(meToTarget, target, me, 3);
-    mathVecProject(proj, me, meToTarget, 3);
-    mathVecSubtract(testPoint, me, proj, 3);
-    return mathVecMagnitude(testPoint,3);
+	
+		
+	}
+	
+	mathVecProject(proj, me, meToTarget, 3);
+    	mathVecSubtract(testPoint, me, proj, 3);
+    	return mathVecMagnitude(testPoint,3);
 }
