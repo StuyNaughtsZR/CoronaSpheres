@@ -83,7 +83,9 @@ void loop() {
 
 			if (picNum > 0) {
 				DEBUG(("%d picture(s) have been taken\n", picNum));
-				state = 3;
+				uploadCalc(uploadPos,me);
+				api.setPositionTarget(uploadPos);
+				state = 5;
 			}
 			break;
 
@@ -118,7 +120,7 @@ void loop() {
 			break;
 
 		case 5: // Upload the picture
-			if (AreWeThereYet(uploadPos)) {
+			if (AreWeThereYet(uploadPos,0.01,0.01)) {
 				game.uploadPic();
 				DEBUG(("I just uploaded %d picture(s).\n", picNum));
 				DEBUG(("I am in state %d.\n", state)); //Why the f**k does it say it's in State 3???
