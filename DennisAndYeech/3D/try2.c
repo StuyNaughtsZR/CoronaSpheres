@@ -212,7 +212,7 @@ void setPositionTarget(float target[3]) {
 	}
 	
 	else {
-		float opposite[3], perpendicular[3], mePrep[3];
+		float opposite[3], perpendicular[3], mePrep[3], path[3];
 		
 		
 		
@@ -224,10 +224,16 @@ void setPositionTarget(float target[3]) {
 		}
 		
 		for (int i = 0; i < 3; i++) {
-			mePrep[i] = (mePrep[i] * 0.32 * 2 * meMag) / (sqrtf(meMag*meMag - 0.32*0.32));
+			mePrep[i] = (mePrep[i] * 0.32 * meMag) / (sqrtf(meMag*meMag - 0.32*0.32));
+		}
+		
+		mathVecSubtract(path,mePrep,myPos);
+		
+		for (int i = 0; i < 3; i++) {
+			path[i] = path[i] * 2;
 		}
 
-		api.setPositionTarget(mePrep);
+		api.setPositionTarget(path);
 	}
 }
 
