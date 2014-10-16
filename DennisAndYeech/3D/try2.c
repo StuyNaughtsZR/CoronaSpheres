@@ -188,8 +188,9 @@ void setPositionTarget(float target[3]) {
 	mathVecCross(cross,myPos,target);
 	inner = mathVecInner(myPos,target,3);
 
-	if (minDistanceFromAsteroid(target) > 0.32) {
+	if (minDistanceFromAsteroid(target) > 0.30) {
 		api.setPositionTarget(target);
+		DEBUG(("JUST GO!!!"));
 	}
 	
 	else if (meMag >= 0.22 && meMag <= 0.32) {
@@ -201,7 +202,7 @@ void setPositionTarget(float target[3]) {
 		DEBUG(("TOO CLOSE"));
 	}
 	
-	else if (mathVecMagnitude(cross,3) < 0.01 && inner > 0.99 && inner < 1.01) {
+	else if (mathVecMagnitude(cross,3) < 0.05 && inner > 0.95 && inner < 1.05) {
 		api.setPositionTarget(target);
 		DEBUG(("GOOD COLLINEARITY DETECTED"));
 	}
@@ -227,15 +228,17 @@ void setPositionTarget(float target[3]) {
 			mePrep[i] = (mePrep[i] * 0.32 * meMag) / (sqrtf(meMag*meMag - 0.32*0.32));
 		}
 		
-		mathVecSubtract(path,mePrep,myPos);
+		mathVecSubtract(path,mePrep,myPos,3);
 		
 		for (int i = 0; i < 3; i++) {
 			path[i] = path[i] * 2;
 		}
 		
-		mathVecAdd(temp,myPos,path);
+		mathVecAdd(temp,myPos,path,3);
 
 		api.setPositionTarget(temp);
+		
+		DEBUG(("TAKING THE TANGENT"));
 	}
 }
 
