@@ -245,21 +245,19 @@ int AreWeThereYet(float target[3], float maxDis, float maxSpeed) {
 	return (distance(me,target) < maxDis) && (velocity(me) < maxSpeed);
 }
 
-float minDistanceFromAsteroid(float target[3]){
-	float path[3], proj[3], dis[3], negMe[3];
-	ZRState me;
-	api.getMyZRState(me);
-	
-	for (int i = 0; i < 3; i++) {
-		path[i] = target[i] - me[i];
-		negMe[i] = -me[i];
-	}
-	
-	mathVecProject(proj,negMe,path,3);
-
-	for (int i = 0; i < 3; i++) {
-		dis[i] = me[i] + proj[i];
-	}
-
-	return mathVecMagnitude(dis,3);
+float minDistanceFromOrigin(float target[]) {
+	float proj[3], meToTarget[3], testPoint[3];
+    if ((mathVecMagnitude(me, 3) * mathVecMagnitude(me, 3) +
+    mathVecMagnitude(meToTarget, 3) * mathVecMagnitude(meToTarget, 3) -
+    mathVecMagnitude(target, 3) * mathVecMagnitude(target, 3)) /
+    (2 * mathVecMagnitude(me, 3) * mathVecMagnitude(ToTarget, 3)) < 0 || 
+	(mathVecMagnitude(target, 3) * mathVecMagnitude(target, 3) +
+    mathVecMagnitude(meToTarget, 3) * mathVecMagnitude(meToTarget, 3) -
+    mathVecMagnitude(me, 3) * mathVecMagnitude(me, 3)) /
+    (2 * mathVecMagnitude(target, 3) * mathVecMagnitude(meToTarget, 3)) < 0)
+		return 10;    // if ∠ target me origin or ∠ me target origin is obtuse, return 10
+    mathVecSubtract(meToTarget, target, me, 3);
+    mathVecProject(proj, me, meToTarget, 3);
+    mathVecSubtract(testPoint, me, proj, 3);
+    return mathVecMagnitude(testPoint,3);
 }
