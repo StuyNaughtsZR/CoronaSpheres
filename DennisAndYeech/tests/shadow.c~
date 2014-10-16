@@ -1,0 +1,36 @@
+ZRState me;
+float shadow1[3],Timei,Timef,Fueli,Fuelf;
+int state;
+
+void init() {
+	state = 0;
+
+	Timei = 0.0;
+
+	Fueli = game.getFuelRemaining();
+
+	shadow1[0] = 0.32;
+	shadow1[1] = -0.19;
+	shadow1[2] = 0.0;
+}
+
+void loop() {
+	api.getMyZRState(me);
+	switch (state) {
+		
+		case 0:
+
+			if (AreWeThereYet(shadow1,0.01,0.01)) state = 1
+			else {
+				setPositionTarget(shadow1);
+			}
+
+			break;
+
+		case 1:
+			Timef = api.getTime();
+			Fuelf = game.getFuelRemaining();
+
+			DEBUG(("Time elapsed: %f \n Fuel Spent: %f", Timef-Timei, Fueli-Fuelf));
+	}
+}
