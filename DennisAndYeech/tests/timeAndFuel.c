@@ -169,7 +169,7 @@ void loop() {
 				state = 1;
 			}
 
-			//break;
+			break;
 
 		case 1:
 			timei1 = api.getTime();
@@ -184,7 +184,7 @@ void loop() {
 			state = 2;
 			}
 			
-			//break;
+			break;
 
 		case 2:
 			timei1 = api.getTime();
@@ -199,7 +199,7 @@ void loop() {
 
 			}
 			
-			//break;
+			break;
 	}
 
 }
@@ -250,7 +250,7 @@ void setPositionTarget(float target[3]) {
 	mathVecCross(cross,myPos,target);
 	inner = mathVecInner(myPos,target,3);
 
-	if (minDistanceFromOrigin(target) > 0.32) {
+	if (minDistanceFromOrigin(target) > 0.33) {
 		api.setPositionTarget(target);
 		DEBUG(("JUST GO!!!"));
 	}
@@ -311,23 +311,41 @@ int AreWeThereYet(float target[3], float maxDis, float maxSpeed) {
 }
 
 float minDistanceFromOrigin(float target[]) {
-	float proj[3], meToTarget[3], testPoint[3],meMag,targetMag,diffMag;
+	ZRState me;
+	float path1[3], path2[3], dot, cosine;
 	
-	mathVecSubtract(meToTarget, target, me, 3);
+	mathVecSubtract(path1,target,me,3);
+	mathVecSubtract(path2,me,target,3);
 	
-	meMag = mathVecMagnitude(me,3);
-	targetMag = mathVecMagnitude(target,3);
-	diffMag = mathVecMagnitude(meToTarget,3);
+	dot = mathVecInner(path1,me,3);
 	
-    	if (((meMag * meMag + diffMag * diffMag - targetMag * targetMag) / (2 * meMag * diffMag)) < 0 || 
-	((targetMag * targetMag + diffMag * diffMag - meMag * meMag) / (2 * targetMag * diffMag)) < 0) {
-		
-		return 10;    // if ∠ target me origin or ∠ me target origin is obtuse, return 10
+	cosine = dot / (mathVecMagnitude(path1, 3) * mathVecMagnitude(me, 3));
 	
-		
+	if (cosine < 0) {
+		return mathVecMagnitude(me, 3);
 	}
 	
-	mathVecProject(proj, me, meToTarget, 3);
-    	mathVecSubtract(testPoint, me, proj, 3);
-    	return mathVecMagnitude(testPoint,3);
+	dot = mathVecInner(path2,target,3);
+	
+	cosine = dot / (mathVecMagnitude(path2, 3) * mathVecMagnitude(target, 3));
+	
+	if (cosine < 0) {
+		return mathVecMagnitude(target,3);
+	}
+	
+	else {
+		float dis[3], negMe[3];
+		
+		mathVecSubtract(path1,target,me,3);
+		
+		for(int i = 0; i < 3; i++) {
+			negMe[i] = -me[i];
+		}
+		
+		mathVecProject(path2,negMe,path1,3);
+		
+		mathVecAdd(dis,me,path2,3);
+		
+		return mathVecMagnitude(dis,3);
+	}
 }
