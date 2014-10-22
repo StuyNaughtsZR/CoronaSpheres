@@ -287,3 +287,14 @@ float minDistanceFromOrigin(float target[]) {
 		return mathVecMagnitude(dis,3);
 	}
 }
+
+float opponentTarget(){
+	ZRState other;
+	api.getOtherZRState(other);
+
+	float otherVel[3], POI1[3], POI2[3], POI3[3] ;
+
+	for (int i = 0 ; i < 3 ; i++) {
+
+	}
+}
