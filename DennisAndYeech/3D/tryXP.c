@@ -91,10 +91,11 @@ void loop() {
 
 		case 3: // Moving to outer zone
 			for (int i = 0; i < 3; i++) {
-				newBrakingPos[i] = POI[i] * 2.5;
+				newBrakingPos[i] = POI[i]*0.46 / mathVecMagnitude(POI,3);
 			}
 			
 			if (AreWeThereYet(newBrakingPos,0.01,0.01)) state = 4;
+			
 			else {
 			    api.setPositionTarget(newBrakingPos);
 			    mathVecSubtract(facing,POI,me,3);
