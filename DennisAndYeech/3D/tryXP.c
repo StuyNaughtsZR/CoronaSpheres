@@ -1,5 +1,5 @@
-// Yeech's Code -- Experimental
-// Not to be confused with the Vinci Code
+// Dencheng Code -- Experimental
+// Not to be confused with the Da Vinci Code
 
 ZRState me;
 int state, POIID, picNum, solarFlareBegin;
@@ -47,6 +47,8 @@ void loop() {
 	    //and from then on return -1 until the next actual flare, so that the 
 	    //SPHERE reboots for no reason.
 	}
+
+	DEBUG(("I can still take %d photos", game.getMemorySize() - game.getMemoryFilled()));
 	
 	switch (state) {
 
@@ -118,12 +120,13 @@ void loop() {
 			dis = distance(me, origin);
 			
 			DEBUG(("I am %f away from the origin", dis));
-			if(game.alignLine(POIID)) {
+
+			if(game.alignLine(POIID)) { // returns true
             	DEBUG(("Alignment achieved\n"));
 				
 				if (dis < 0.53 && dis > 0.42){
 					game.takePic(POIID);
-					DEBUG(("Imma take a photo!"));
+					DEBUG(("Imma take a photo!")); // returns true??? But no picture taken???
 				}
 
 				else if (dis > 0.53) {
@@ -150,7 +153,7 @@ void loop() {
 				DEBUG(("Still not focused\n"));
 			}
 
-			if (picNum > 1) {
+			if (picNum > 1) { // Doesn't take a picture, f(3x) and let u be 3x...
 				DEBUG(("%d picture(s) have been taken\n", picNum));
 				uploadCalc(uploadPos,me);
 				api.setPositionTarget(uploadPos);
