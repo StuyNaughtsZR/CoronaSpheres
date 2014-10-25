@@ -3,9 +3,13 @@
 
 ZRState me;
 int state, POIID, picNum, solarFlareBegin;
-float POI[3],otherPOI[3],brakingPos[3],newBrakingPos[3],facing[3],uploadPos[3];
+float POI[3],otherPOI[3],brakingPos[3],newBrakingPos[3],facing[3],uploadPos[3],origin[3],dis;
 
 void init() {
+
+	for (int i = 0 ; i < 3 ; i++) {
+		origin[i] = 0.0;
+	}
 
 	solarFlareBegin = 1000; //Just to make the solar storm evasion code neater
 
@@ -85,13 +89,13 @@ void loop() {
 				DEBUG(("%d picture(s) have been taken\n", picNum));
 				uploadCalc(uploadPos,me);
 				api.setPositionTarget(uploadPos);
-				state = 5;
+				state = 3;
 			}
 			break;
 
 		case 3: // Moving to outer zone
 			for (int i = 0; i < 3; i++) {
-				newBrakingPos[i] = POI[i]*0.46 / mathVecMagnitude(POI,3);
+				newBrakingPos[i] = POI[i]*0.5 / mathVecMagnitude(POI,3);
 			}
 			
 			if (AreWeThereYet(newBrakingPos,0.01,0.01)) state = 4;
@@ -110,7 +114,41 @@ void loop() {
 			mathVecSubtract(facing,POI,me,3);
 			mathVecNormalize(facing,3);
 			api.setAttitudeTarget(facing);
-            game.takePic(POIID);
+
+			dis = distance(me, origin);
+			
+			DEBUG(("I am %f away from the origin", dis));
+			if(game.alignLine(POIID)) {
+            	DEBUG(("Alignment achieved\n"));
+				
+				if (dis < 0.53 && dis > 0.42){
+					game.takePic(POIID);
+					DEBUG(("Imma take a photo!"));
+				}
+
+				else if (dis > 0.53) {
+					DEBUG(("I'm too far!"));
+
+					for (int i = 0 ; i < 3 ; i++) {
+						newBrakingPos[i] = newBrakingPos[i] * 0.95;
+					}
+
+					api.setPositionTarget(newBrakingPos);
+				}
+				else {
+					DEBUG(("I'm too close!"));
+					
+					for (int i = 0 ; i < 3 ; i++) {
+						newBrakingPos[i] = newBrakingPos[i] * 1.05;
+					}
+
+					api.setPositionTarget(newBrakingPos);
+				}
+			}
+
+			else {
+				DEBUG(("Still not focused\n"));
+			}
 
 			if (picNum > 1) {
 				DEBUG(("%d picture(s) have been taken\n", picNum));
@@ -118,6 +156,7 @@ void loop() {
 				api.setPositionTarget(uploadPos);
 				state = 5;
 			}
+
 			break;
 
 		case 5: // Upload the picture
