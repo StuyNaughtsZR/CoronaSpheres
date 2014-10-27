@@ -64,13 +64,13 @@ void loop() {
 			DEBUG(("POI Coors = %f,%f,%f\n",POI[0],POI[1],POI[2]));
 
 			for (int i = 0; i < 3; i++) {
-				brakingPos[i] = POI[i] * 2.0; //1.5625; <- let's try the outer zone
+				brakingPos[i] = POI[i] * 0.5 / mathVecMagnitude(POI,3); //outer zone
 			}
 			
 			state = 1;
 			break;
 
-		case 1: // Orbit Function here
+		case 1: // Move to pic taking site in outer zone
 			if (AreWeThereYet(brakingPos,0.01,0.01)) state = 2;
 			else {
 			    setPositionTarget(brakingPos);
@@ -80,7 +80,7 @@ void loop() {
 			}
 			break;
 
-		case 2: // First Pic in inner Zone
+		case 2: // First Pic in outer zone
 			setPositionTarget(brakingPos);
 			mathVecSubtract(facing,POI,me,3);
 			mathVecNormalize(facing,3);
@@ -95,9 +95,9 @@ void loop() {
 			}
 			break;
 
-		case 3: // Moving to outer zone
+		case 3: // Moving to inner zone
 			for (int i = 0; i < 3; i++) {
-				newBrakingPos[i] = POI[i]*0.5 / mathVecMagnitude(POI,3);
+				newBrakingPos[i] = POI[i] * 0.35 / mathVecMagnitude(POI,3);
 			}
 			
 			if (AreWeThereYet(newBrakingPos,0.01,0.01)) state = 4;
