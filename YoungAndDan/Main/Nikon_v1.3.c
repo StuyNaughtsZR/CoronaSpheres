@@ -1,5 +1,5 @@
 ZRState me;
-int state, tempstate, POIID, picNum;
+int state, tempstate, POIID, picNum, solarFlareBegin;
 float POI[3], uploadPos[3], facing[3];
 float target[3], origin[3];
 
@@ -15,6 +15,9 @@ void init() {
 	goodPOI[1] = 1;
 	goodPOI[2] = 0;
 	POIID = -1;
+	
+	solarFlareBegin = 1000;
+	
     state = 0;
 }
 
@@ -23,12 +26,36 @@ void loop() {
 	api.getMyZRState(me);
 	picNum = game.getMemoryFilled();
 	
-	if(api.getTime() % 60 == 0){
+	if((api.getTime() % 60 < 6)&&(api.getTime() > 10)){
 	    goodPOI[0] = 1;
         goodPOI[1] = 1;
         goodPOI[2] = 1;
 	    state = 6;
 	}
+	
+	if (api.getTime() == (solarFlareBegin - 1)) { //I STEAL FROM YICHENG TY
+	    DEBUG(("I shall now reboot.\n"));
+		game.turnOff();
+		game.turnOn();
+		state = 0;
+	}
+	else if (api.getTime() >= (solarFlareBegin) && api.getTime() <= (solarFlareBegin + 4)) {
+	    DEBUG(("Ah shit, it's a flare!\n"));
+	    state = 7;
+	}
+	else if (game.getNextFlare() != -1) {
+	    solarFlareBegin = api.getTime() + game.getNextFlare();
+	    DEBUG(("Next solar flare will occur at %ds.\n", solarFlareBegin));
+	}
+	else {
+	    DEBUG(("I don't know when the next flare is, so stop asking.\n"));
+	    solarFlareBegin = 1000; //Fixes a glitch that makes game.getNextFlare()
+	    //return 30s at some random point in the beginning of the game,
+	    //and from then on return -1 until the next actual flare, so that the 
+	    //SPHERE reboots for no reason.
+	}
+	
+	
 		        
 	switch (state) {
 		case 0: // POI Selection
@@ -39,13 +66,11 @@ void loop() {
 
 		case 1: //set target to outer
 		    for(int i = 0; i < 3; i++){ 
-		        target[i] = POI[i]*0.46/mathVecMagnitude(POI,3);
+		        target[i] = POI[i]*0.475/mathVecMagnitude(POI,3);
 		    }
 			toTarget();
-			for(int i = 0; i < 3; i++){ 
-		        facing[i] = -1*me[i] + 0.02; 
-		    }
 		    DEBUG(("Outer Zone Coors = %f,%f,%f\n",target[0],target[1],target[2]));
+			mathVecSubtract(facing,POI,me,3);
 			mathVecNormalize(facing,3);
 			api.setAttitudeTarget(facing);
 			if(pathToTarget(me,target,waypoint)){
@@ -60,10 +85,9 @@ void loop() {
 			break;
 
 		case 2: // First Pic in Outer Zone
-		    for(int i = 0; i < 3; i++){ 
-    		        facing[i] = -1*me[i]; 
-    		    }
 		    mathVecSubtract(facing,POI,me,3);
+			mathVecNormalize(facing,3);
+			api.setAttitudeTarget(facing);
 		    api.setAttitudeTarget(facing);
 		    toTarget();
 		    if(game.alignLine(POIID)){
@@ -82,9 +106,7 @@ void loop() {
 		        target[i] = POI[i]*0.38/mathVecMagnitude(POI,3);
 		    }
 			toTarget();
-			for(int i = 0; i < 3; i++){ 
-		        facing[i] = -1*me[i]; 
-		    }
+			mathVecSubtract(facing,POI,me,3);
 			mathVecNormalize(facing,3);
 			api.setAttitudeTarget(facing);
 			if(pathToTarget(me,target,waypoint)){
@@ -99,9 +121,7 @@ void loop() {
 			break;
 			
 		case 4: //take picture in inner zone
-		    for(int i = 0; i < 3; i++){ 
-		        facing[i] = -1*me[i]; 
-		    }
+		    mathVecSubtract(facing,POI,me,3);
 			mathVecNormalize(facing,3);
 			api.setAttitudeTarget(facing);
 		    toTarget();
@@ -141,22 +161,26 @@ void loop() {
                 state = 0;
             }
 		    break;
+		case 7: //stop because of flare
+		    api.setPositionTarget(me);
+		    break;
 	}
 }
 
-//SIDE FUNCTIONS
+//SIDECHAINS
+
 bool goToWaypoint(float target[],float waypoint[],float tempTarget[], float originalVecBetween[]){
             mathVecSubtract(vecBetween, waypoint, me, 3);
 	        float temp[3];
 	        //for(int i = 0; i < 3; i++){
     	    //        temp[i] = 1.5*me[i+2];
     	    //}
-    	    if(angleBetween(me,target) > 130 *PI / 180){
-    	        dilateValue(waypoint,tempTarget, -1.2,tempTarget);
-    	    }
-    	    else{
-    	        dilateValue(waypoint,tempTarget, -1.1,tempTarget);
-    	    }
+    	    //if(angleBetween(me,target) > 150 *PI / 180){
+    	    //    dilateValue(waypoint,tempTarget, -1.1,tempTarget);
+    	    //}
+    	    //else{
+    	        dilateValue(waypoint,tempTarget, -1.04,tempTarget);
+    	    //}
 	        if(pathToTarget(me,tempTarget,temp)){
 	            api.setVelocityTarget(originalVecBetween); 
 	                                   //magnitude stays the same as beginning magnitude
@@ -251,7 +275,8 @@ void closestPOI(int goodPOIS[], float nextPOI[]){
         if (distances[i]<= shortestdistance){
             shortestdistance = distances[i];
             POIID = i;
-        }
+            goodPOIS[i] = 0;
+        } 
     }
     game.getPOILoc(nextPOI,POIID);
 }
