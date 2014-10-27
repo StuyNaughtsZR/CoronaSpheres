@@ -1,4 +1,110 @@
+ZRState me;
+int state, tempstate, POIID, picNum;
+float POI[3], uploadPos[3], facing[3];
+float target[3], origin[3];
 
+int goodPOI[3]; //This array says which POIS are able to be gone to
+
+float originalVecBetween[3], waypoint[3],vecBetween[3],tempTarget[3];
+
+void init() {
+    for(int i = 0; i < 3; i++){ 
+		origin[i] = 0.00;
+	}
+	goodPOI[0] = 1;
+	goodPOI[1] = 1;
+	goodPOI[2] = 0;
+	POIID = -1;
+    state = 0;
+}
+
+void loop() {
+	
+	api.getMyZRState(me);
+	picNum = game.getMemoryFilled();
+	
+	if(api.getTime() % 60 == 0){
+	    goodPOI[0] = 1;
+        goodPOI[1] = 1;
+        goodPOI[2] = 1;
+	    state = 6;
+	}
+		        
+	switch (state) {
+		case 0: // POI Selection
+			closestPOI(goodPOI,POI);
+			DEBUG(("POI Coors = %f,%f,%f\n",POI[0],POI[1],POI[2]));
+			state = 1;
+			break;
+
+		case 1: //set target to outer
+		    for(int i = 0; i < 3; i++){ 
+		        target[i] = POI[i]*0.46/mathVecMagnitude(POI,3);
+		    }
+			toTarget();
+			for(int i = 0; i < 3; i++){ 
+		        facing[i] = -1*me[i] + 0.02; 
+		    }
+		    DEBUG(("Outer Zone Coors = %f,%f,%f\n",target[0],target[1],target[2]));
+			mathVecNormalize(facing,3);
+			api.setAttitudeTarget(facing);
+			if(pathToTarget(me,target,waypoint)){
+	                setWaypoint(waypoint,originalVecBetween);
+	                tempstate = 2;
+	                state = 5;
+	                for (int i = 0; i < 3; i++) tempTarget[i] = target[i];
+	        }
+	        else{
+	            state = 2;
+	        }
+			break;
+
+		case 2: // First Pic in Outer Zone
+		    for(int i = 0; i < 3; i++){ 
+    		        facing[i] = -1*me[i]; 
+    		    }
+		    mathVecSubtract(facing,POI,me,3);
+		    api.setAttitudeTarget(facing);
+		    toTarget();
+		    if(game.alignLine(POIID)){
+		        if(distance(me,origin)<0.53){
+		            game.takePic(POIID);
+		        }
+		    }
+            if(picNum > 0){
+                DEBUG(("PICTURE IN OUTER ZONE TAKEN"));
+                state = 3;
+            }
+			break;
+			
+        case 3: //set target to inner zone
+		    for(int i = 0; i < 3; i++){ 
+		        target[i] = POI[i]*0.38/mathVecMagnitude(POI,3);
+		    }
+			toTarget();
+			for(int i = 0; i < 3; i++){ 
+		        facing[i] = -1*me[i]; 
+		    }
+			mathVecNormalize(facing,3);
+			api.setAttitudeTarget(facing);
+			if(pathToTarget(me,target,waypoint)){
+	                setWaypoint(waypoint,originalVecBetween);
+	                tempstate = 4;
+	                state = 5;
+	                for (int i = 0; i < 3; i++) tempTarget[i] = target[i];
+	        }
+	        else{
+	            state = 4;
+	        }
+			break;
+			
+		case 4: //take picture in inner zone
+		    for(int i = 0; i < 3; i++){ 
+		        facing[i] = -1*me[i]; 
+		    }
+			mathVecNormalize(facing,3);
+			api.setAttitudeTarget(facing);
+		    toTarget();
 		    if(game.alignLine(POIID)){
 		        if(distance(me,origin)<0.42){
 		            game.takePic(POIID);
@@ -37,6 +143,7 @@
 		    break;
 	}
 }
+
 //SIDE FUNCTIONS
 bool goToWaypoint(float target[],float waypoint[],float tempTarget[], float originalVecBetween[]){
             mathVecSubtract(vecBetween, waypoint, me, 3);
