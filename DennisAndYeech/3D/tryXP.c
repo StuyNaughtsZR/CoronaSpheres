@@ -347,7 +347,7 @@ float minDistanceFromOrigin(float target[]) {
 		return mathVecMagnitude(dis,3);
 	}
 }
-
+/*
 float opponentTarget(){
 	ZRState other;
 	api.getOtherZRState(other);
@@ -365,4 +365,4 @@ float opponentTarget(){
 		projection = mathVecProject(POIs[i],)
 	}
 
-}
+}*/
