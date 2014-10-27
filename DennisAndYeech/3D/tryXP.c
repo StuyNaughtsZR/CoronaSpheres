@@ -3,7 +3,7 @@
 
 ZRState me;
 int state, POIID, picNum, solarFlareBegin;
-float POI[3],otherPOI[3],brakingPos[3],newBrakingPos[3],facing[3],uploadPos[3],origin[3],dis;
+float POI[3],otherPOI1[3],otherPOI2[3],brakingPos[3],newBrakingPos[3],facing[3],uploadPos[3],origin[3],dis;
 
 void init() {
 
@@ -42,10 +42,10 @@ void loop() {
 	}
 	else {
 	    DEBUG(("I don't know when the next flare is, so stop asking.\n"));
-	    solarFlareBegin = 1000; //Fixes a glitch that makes game.getNextFlare()
-	    //return 30s at some random point in the beginning of the game,
-	    //and from then on return -1 until the next actual flare, so that the 
-	    //SPHERE reboots for no reason.
+	    solarFlareBegin = 1000; /*Fixes a glitch that makes game.getNextFlare()
+	    return 30s at some random point in the beginning of the game,
+	    and from then on return -1 until the next actual flare, so that the 
+	    SPHERE reboots for no reason.*/
 	}
 
 	DEBUG(("I can still take %d photos", game.getMemorySize() - game.getMemoryFilled()));
@@ -54,10 +54,21 @@ void loop() {
 
 		case 0: // POI Selection
 			game.getPOILoc(POI,0);
-			game.getPOILoc(otherPOI,1);
-			if (distance(me,otherPOI) <= distance(me,POI)) {
-				POIID = 1;
-				for (int i = 0; i < 3; i++) POI[i] = otherPOI[i];
+			game.getPOILoc(otherPOI1,1);
+			game.getPOILoc(otherPOI2,2);
+			if (distance(me,otherPOI1) <= distance(me,POI)) {
+				if (distance(me,otherPOI2) <= distance(me,otherPOI1)){
+					POIID = 2;
+					for (int i = 0; i < 3; i++) POI[i] = otherPOI2[i];
+				}
+				else {
+					POIID = 1;
+					for (int i = 0; i < 3; i++) POI[i] = otherPOI1[i];
+				}
+			}
+			else if (distance(me,otherPOI2) <= distance(me,POI)) {
+				POIID = 2;
+				for (int i = 0; i < 3; i++) POI[i] = otherPOI2[i];
 			}
 			else POIID = 0;
 			
