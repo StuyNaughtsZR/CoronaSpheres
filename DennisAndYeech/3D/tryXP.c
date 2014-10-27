@@ -64,7 +64,7 @@ void loop() {
 			DEBUG(("POI Coors = %f,%f,%f\n",POI[0],POI[1],POI[2]));
 
 			for (int i = 0; i < 3; i++) {
-				brakingPos[i] = POI[i] * 0.35 / mathVecMagnitude(POI,3); //inner
+				brakingPos[i] = POI[i] * 0.38 / mathVecMagnitude(POI,3); //inner
 			}
 			
 			state = 1;
@@ -89,14 +89,22 @@ void loop() {
 
 			if (picNum > 0) {
 				DEBUG(("%d picture(s) have been taken\n", picNum));
+
+				for (int i = 0; i < 3; i++) {
+					newBrakingPos[i] = POI[i] * 0.43 / mathVecMagnitude(POI,3);
+				}
+				setPositionTarget(newBrakingPos);
+				mathVecSubtract(facing,POI,me,3);
+				mathVecNormalize(facing,3);
+				api.setAttitudeTarget(facing);
+
 				state = 3;
 			}
+
 			break;
 
 		case 3: // Moving to outer zone
-			for (int i = 0; i < 3; i++) {
-				newBrakingPos[i] = POI[i] * 0.45 / mathVecMagnitude(POI,3);
-			}
+
 			
 			if (AreWeThereYet(newBrakingPos,0.01,0.01)) state = 4;
 			
@@ -333,9 +341,17 @@ float opponentTarget(){
 	ZRState other;
 	api.getOtherZRState(other);
 
-	float otherVel[3], POI1[3], POI2[3], POI3[3] ;
+	float otherVel[3], POIs[3][3], distances[3], projection[3], prep[3];
 
 	for (int i = 0 ; i < 3 ; i++) {
-
+		otherVel[i] = other[3 + i]*3;
+		game.getPOILoc(POIs[i],i);
 	}
+
+	mathVecAdd(other,otherVel,3);
+
+	for (int i = 0 ; i < 3 ; i++) {
+		projection = mathVecProject(POIs[i],)
+	}
+
 }
