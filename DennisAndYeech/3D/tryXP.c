@@ -19,7 +19,7 @@ void loop() {
 	
 	api.getMyZRState(me);
 
-	if(api.getTime() % 60 == 0 && state != 4) state = 0;
+	if(api.getTime() % 60 == 0 && state != 5) state = 0;
 	
 	DEBUG(("State = %d\n", state));
 
@@ -64,13 +64,13 @@ void loop() {
 			DEBUG(("POI Coors = %f,%f,%f\n",POI[0],POI[1],POI[2]));
 
 			for (int i = 0; i < 3; i++) {
-				brakingPos[i] = POI[i] * 0.5 / mathVecMagnitude(POI,3); //outer zone
+				brakingPos[i] = POI[i] * 0.35 / mathVecMagnitude(POI,3); //inner
 			}
 			
 			state = 1;
 			break;
 
-		case 1: // Move to pic taking site in outer zone
+		case 1: // Move to pic taking site in inner zone
 			if (AreWeThereYet(brakingPos,0.01,0.01)) state = 2;
 			else {
 			    setPositionTarget(brakingPos);
@@ -80,7 +80,7 @@ void loop() {
 			}
 			break;
 
-		case 2: // First Pic in outer zone
+		case 2: // First Pic in inner zone
 			setPositionTarget(brakingPos);
 			mathVecSubtract(facing,POI,me,3);
 			mathVecNormalize(facing,3);
@@ -89,15 +89,13 @@ void loop() {
 
 			if (picNum > 0) {
 				DEBUG(("%d picture(s) have been taken\n", picNum));
-				uploadCalc(uploadPos,me);
-				api.setPositionTarget(uploadPos);
 				state = 3;
 			}
 			break;
 
-		case 3: // Moving to inner zone
+		case 3: // Moving to outer zone
 			for (int i = 0; i < 3; i++) {
-				newBrakingPos[i] = POI[i] * 0.35 / mathVecMagnitude(POI,3);
+				newBrakingPos[i] = POI[i] * 0.45 / mathVecMagnitude(POI,3);
 			}
 			
 			if (AreWeThereYet(newBrakingPos,0.01,0.01)) state = 4;
@@ -107,7 +105,7 @@ void loop() {
 			    mathVecSubtract(facing,POI,me,3);
 			    mathVecNormalize(facing,3);
 			    api.setAttitudeTarget(facing);
-			    game.takePic(POIID);
+			    //game.takePic(POIID);
 			}
 			break;
 		
@@ -119,15 +117,16 @@ void loop() {
 
 			dis = distance(me, origin);
 			
-			DEBUG(("I am %f away from the origin", dis));
+			DEBUG(("I am %f away from the origin\n", dis));
 
 			if(game.alignLine(POIID)) { // returns true
             	DEBUG(("Alignment achieved\n"));
 				
 				if (dis < 0.53 && dis > 0.42){
 					game.takePic(POIID);
-					DEBUG(("Imma take a photo!")); // returns true??? But no picture taken???
+					DEBUG(("Imma take a photo!")); // NVM problem solve
 				}
+				/*
 
 				else if (dis > 0.53) {
 					DEBUG(("I'm too far!"));
@@ -147,6 +146,7 @@ void loop() {
 
 					api.setPositionTarget(newBrakingPos);
 				}
+				*/
 			}
 
 			else {
@@ -155,7 +155,7 @@ void loop() {
 
 			if (picNum > 1) { // Doesn't take a picture, f(3x) and let u be 3x...
 				DEBUG(("%d picture(s) have been taken\n", picNum));
-				uploadCalc(uploadPos,me);
+				uploadCalc(uploadPos,POI);
 				api.setPositionTarget(uploadPos);
 				state = 5;
 			}
@@ -172,12 +172,11 @@ void loop() {
 			}
 			else {
 
-				mathVecSubtract(facing,POI,me,3);
-				mathVecNormalize(facing,3);
-				api.setAttitudeTarget(facing);
-
+				//mathVecSubtract(facing,POI,me,3);
+				//mathVecNormalize(facing,3);
+				//api.setAttitudeTarget(facing);
 				api.setPositionTarget(uploadPos);
-				game.takePic(POIID);
+				game.takePic(POIID); // why the f**k not
 			}
 
 			break;
@@ -202,9 +201,8 @@ float velocity(float p1[]){
 }
 
 void uploadCalc(float uploadPos[], float POI[]){
-	mathVecNormalize(me,3);
 	for (int i = 0; i < 3; i++) {
-		uploadPos[i] = me[i] * 0.55;
+		uploadPos[i] = POI[i] * 0.6 / mathVecMagnitude(POI,3);
 	}
 }
 
@@ -233,7 +231,7 @@ void setPositionTarget(float target[3]) {
 
 	if (minDistanceFromOrigin(target) > 0.30) {
 		api.setPositionTarget(target);
-		DEBUG(("JUST GO!!!"));
+		DEBUG(("JUST GO!!!\n"));
 	}
 	
 	else if (meMag >= 0.22 && meMag <= 0.32) {
@@ -242,7 +240,7 @@ void setPositionTarget(float target[3]) {
 		}
 		
 		api.setPositionTarget(myPos);
-		DEBUG(("TOO CLOSE"));
+		DEBUG(("TOO CLOSE\n"));
 	}
 	
 	else if (mathVecMagnitude(cross,3) < 0.05 && inner > 0.95 && inner < 1.05) {
@@ -268,7 +266,7 @@ void setPositionTarget(float target[3]) {
 		}
 		
 		for (int i = 0; i < 3; i++) {
-			mePrep[i] = (mePrep[i] * 0.32 * meMag) / (sqrtf(meMag*meMag - 0.32*0.32));
+			mePrep[i] = (mePrep[i] * 0.325 * meMag) / (sqrtf(meMag*meMag - 0.32*0.32));
 		}
 		
 		mathVecSubtract(path,mePrep,myPos,3);
@@ -281,7 +279,7 @@ void setPositionTarget(float target[3]) {
 
 		api.setPositionTarget(temp);
 		
-		DEBUG(("TAKING THE TANGENT"));
+		DEBUG(("TAKING THE TANGENT\n"));
 	}
 }
 
