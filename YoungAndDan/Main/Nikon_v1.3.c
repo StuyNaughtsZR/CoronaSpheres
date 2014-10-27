@@ -33,28 +33,6 @@ void loop() {
 	    state = 6;
 	}
 	
-	if (api.getTime() == (solarFlareBegin - 1)) { //I STEAL FROM YICHENG TY
-	    DEBUG(("I shall now reboot.\n"));
-		game.turnOff();
-		game.turnOn();
-		state = 0;
-	}
-	else if (api.getTime() >= (solarFlareBegin) && api.getTime() <= (solarFlareBegin + 4)) {
-	    DEBUG(("Ah shit, it's a flare!\n"));
-	    state = 7;
-	}
-	else if (game.getNextFlare() != -1) {
-	    solarFlareBegin = api.getTime() + game.getNextFlare();
-	    DEBUG(("Next solar flare will occur at %ds.\n", solarFlareBegin));
-	}
-	else {
-	    DEBUG(("I don't know when the next flare is, so stop asking.\n"));
-	    solarFlareBegin = 1000; //Fixes a glitch that makes game.getNextFlare()
-	    //return 30s at some random point in the beginning of the game,
-	    //and from then on return -1 until the next actual flare, so that the 
-	    //SPHERE reboots for no reason.
-	}
-	
 	
 		        
 	switch (state) {
