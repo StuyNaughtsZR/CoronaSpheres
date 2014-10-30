@@ -1,4 +1,4 @@
-// Dencheng Code -- Vista
+// Dencheng Code -- Experimental
 // Not to be confused with the Da Vinci Code
 
 ZRState me;
@@ -26,7 +26,7 @@ void loop() {
 	picNum = game.getMemoryFilled();
 
 	// Solar Storm Evasion
-	
+
 	if (api.getTime() == (solarFlareBegin - 1)) {
 	    DEBUG(("I shall now reboot.\n"));
 		game.turnOff();
@@ -82,7 +82,7 @@ void loop() {
 			break;
 
 		case 1: // Move to pic taking site in inner zone
-			if (AreWeThereYet(brakingPos,0.1,0.1)) state = 2;
+			if (AreWeThereYet(brakingPos,0.01,0.01)) state = 2;
 			else {
 			    setPositionTarget(brakingPos);
 			    mathVecSubtract(facing,POI,me,3);
@@ -117,7 +117,7 @@ void loop() {
 		case 3: // Moving to outer zone
 
 			
-			if (AreWeThereYet(newBrakingPos,0.1,0.1)) state = 4;
+			if (AreWeThereYet(newBrakingPos,0.01,0.01)) state = 4;
 			
 			else {
 			    api.setPositionTarget(newBrakingPos);
@@ -182,7 +182,7 @@ void loop() {
 			break;
 
 		case 5: // Upload the picture
-			if (AreWeThereYet(uploadPos,0.1,0.1)) {
+			if (AreWeThereYet(uploadPos,0.01,0.01)) {
 				game.uploadPic();
 				DEBUG(("I just uploaded %d picture(s).\n", picNum));
 				DEBUG(("I am in state %d.\n", state)); //Why the f**k does it say it's in State 3???
@@ -249,7 +249,7 @@ void setPositionTarget(float target[3]) {
 	inner = mathVecInner(myPos,target,3);
 
 	if (minDistanceFromOrigin(target) > 0.30) {
-		api.setPositionTarget(target,3);
+		api.setPositionTarget(target);
 		DEBUG(("JUST GO!!!\n"));
 	}
 	
@@ -263,7 +263,7 @@ void setPositionTarget(float target[3]) {
 	}
 	
 	else if (mathVecMagnitude(cross,3) < 0.05 && inner > 0.95 && inner < 1.05) {
-		api.setPositionTarget(target,3);
+		api.setPositionTarget(target);
 		DEBUG(("GOOD COLLINEARITY DETECTED"));
 	}
 	
@@ -296,7 +296,7 @@ void setPositionTarget(float target[3]) {
 		
 		mathVecAdd(temp,myPos,path,3);
 
-		api.setPositionTarget(temp,3);
+		api.setPositionTarget(temp);
 		
 		DEBUG(("TAKING THE TANGENT\n"));
 	}
@@ -347,7 +347,7 @@ float minDistanceFromOrigin(float target[]) {
 		return mathVecMagnitude(dis,3);
 	}
 }
-/*
+
 float opponentTarget(){
 	ZRState other;
 	api.getOtherZRState(other);
@@ -365,15 +365,4 @@ float opponentTarget(){
 		projection = mathVecProject(POIs[i],)
 	}
 
-}*/
-
-void haulAssTowardsTarget(float target[],float multipler) {
-	
-	float newTarget[3];
-	
-	for (int i = 0 ; i < 3 ; i++) {
-		newTarget[i] = target[i] * multipler;
-	}
-
-	api.setPositionTarget(newTarget);
 }
