@@ -280,7 +280,9 @@ float angleBetween(float pt1[3], float pt2[3]){
 }
 void haulAssTowardTarget(float target[], float scalar) {
     // makes you go in the direction of target, but scalar times faster
-    float scaledTarget[3];
-    for (int i = 0; i < 3; i++) scaledTarget[i] = me[i] + scalar * (target[i] - me[i]);
-    api.setPositionTarget(scaledTarget);
+    float retVector[3], myVector[3], meTarget[3];
+    for (int i = 0; i < 3; i++) myVector[i] = me[i+3];
+    mathVecSubtract(meTarget,target,me,3);
+    mathVecSubtract(retVector,meTarget,myVector,3);
+    api.setVelocityTarget(retVector);
 }
