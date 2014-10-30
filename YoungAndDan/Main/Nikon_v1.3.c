@@ -26,10 +26,10 @@ void loop() {
 	api.getMyZRState(me);
 	picNum = game.getMemoryFilled();
 	
-	if(api.getTime() % 60 == 0){
+	if((api.getTime() % 60 == 0)&&(api.getTime()>0)){
 	    goodPOI[0] = 1;
-        goodPOI[1] = 1;
-        goodPOI[2] = 1;
+	    goodPOI[1] = 1;
+	    goodPOI[2] = 1;
 	    state = 6;
 	}
 	
