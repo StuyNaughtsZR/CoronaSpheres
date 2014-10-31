@@ -175,26 +175,30 @@ void loop() {
 			if (picNum > 1) { // Doesn't take a picture, f(3x) and let u be 3x...
 				DEBUG(("%d picture(s) have been taken\n", picNum));
 				uploadCalc(uploadPos,POI);
-				api.setPositionTarget(uploadPos);
+				haulAssTowardsTarget(uploadPos,1.5);
 				state = 5;
 			}
 
 			break;
 
 		case 5: // Upload the picture
-			if (AreWeThereYet(uploadPos,0.1,0.1)) {
+			if (distance(origin,me) > 0.54) {
 				game.uploadPic();
 				DEBUG(("I just uploaded %d picture(s).\n", picNum));
 				DEBUG(("I am in state %d.\n", state)); //Why the f**k does it say it's in State 3???
 				// B/c ding-dongs forgot to type "break;"
-				state = 0;
+				
+				if (game.getMemoryFilled() == 0) {
+					state = 0;	
+				}
+				
 			}
 			else {
 
 				//mathVecSubtract(facing,POI,me,3);
 				//mathVecNormalize(facing,3);
 				//api.setAttitudeTarget(facing);
-				api.setPositionTarget(uploadPos);
+				haulAssTowardsTarget(uploadPos,1.5);
 				game.takePic(POIID); // why the f**k not
 			}
 
@@ -249,7 +253,7 @@ void setPositionTarget(float target[3]) {
 	inner = mathVecInner(myPos,target,3);
 
 	if (minDistanceFromOrigin(target) > 0.30) {
-		api.setPositionTarget(target,3);
+		api.setPositionTarget(target);
 		DEBUG(("JUST GO!!!\n"));
 	}
 	
@@ -263,7 +267,7 @@ void setPositionTarget(float target[3]) {
 	}
 	
 	else if (mathVecMagnitude(cross,3) < 0.05 && inner > 0.95 && inner < 1.05) {
-		api.setPositionTarget(target,3);
+		api.setPositionTarget(target);
 		DEBUG(("GOOD COLLINEARITY DETECTED"));
 	}
 	
@@ -296,7 +300,7 @@ void setPositionTarget(float target[3]) {
 		
 		mathVecAdd(temp,myPos,path,3);
 
-		api.setPositionTarget(temp,3);
+		api.setPositionTarget(temp);
 		
 		DEBUG(("TAKING THE TANGENT\n"));
 	}
