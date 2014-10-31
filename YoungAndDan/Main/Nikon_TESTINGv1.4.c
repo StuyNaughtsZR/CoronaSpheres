@@ -65,7 +65,6 @@ void loop() {
 		case 2: // First Pic in Outer Zone
 		    mathVecSubtract(facing,POI,me,3);
 			mathVecNormalize(facing,3);
-			api.setAttitudeTarget(facing);
 		    api.setAttitudeTarget(facing);
 		    toTarget();
 		    if(game.alignLine(POIID)){
@@ -150,15 +149,7 @@ void loop() {
 bool goToWaypoint(float target[],float waypoint[],float tempTarget[], float originalVecBetween[]){
             mathVecSubtract(vecBetween, waypoint, me, 3);
 	        float temp[3];
-	        //for(int i = 0; i < 3; i++){
-    	    //        temp[i] = 1.5*me[i+2];
-    	    //}
-    	    //if(angleBetween(me,target) > 150 *PI / 180){
-    	    //    dilateValue(waypoint,tempTarget, -1.1,tempTarget);
-    	    //}
-    	    //else{
-    	        dilateValue(waypoint,tempTarget, -1.04,tempTarget);
-    	    //}
+    	    dilateValue(waypoint,tempTarget, -1.04,tempTarget);
 	        if(pathToTarget(me,tempTarget,temp)){
 	            api.setVelocityTarget(originalVecBetween); 
 	                                   //magnitude stays the same as beginning magnitude
@@ -181,22 +172,16 @@ void setWaypoint(float waypoint[],float originalVecBetween[]){
     	                    }
     	                }
     	            }
-    	            /*
-    	            for(int i = 0; i < 3; i++){
-    	                if(waypoint[i] >= 0){
-    	                        waypoint[i] += 0.03;
-    	                    }
-    	                    else{
-    	                        waypoint[i] -= 0.03;
-    	                    }
-    	            }
-    	            */
     	            mathVecSubtract(originalVecBetween, waypoint, me, 3); 
+    	            if(mathVecMagnitude(originalVecBetween,3)>0.60){
+    	                for(int i=0; i < 3; i++){
+    	                    originalVecBetween[i] = 0.60*originalVecBetween[i]/mathVecMagnitude(originalVecBetween,3);
+    	                }
+    	            }
 }
 void toTarget(){
 	        if(distance(me,target)>0.08){
 	            haulAssTowardTarget(target,2);
-	            DEBUG(("Going to Target"));
 	        }
 	        else{
 	            api.setPositionTarget(target);
@@ -279,10 +264,7 @@ float angleBetween(float pt1[3], float pt2[3]){
     return acosf(dot);
 }
 void haulAssTowardTarget(float target[], float scalar) {
-    // makes you go in the direction of target, but scalar times faster
-    float retVector[3], myVector[3], meTarget[3];
-    for (int i = 0; i < 3; i++) myVector[i] = me[i+3];
-    mathVecSubtract(meTarget,target,me,3);
-    mathVecSubtract(retVector,meTarget,myVector,3);
-    api.setVelocityTarget(retVector);
+        float scaledTarget[3];
+        for (int i = 0; i < 3; i++) scaledTarget[i] = me[i] + scalar * (target[i] - me[i]);
+        api.setPositionTarget(scaledTarget);
 }
