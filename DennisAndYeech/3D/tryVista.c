@@ -182,7 +182,7 @@ void loop() {
 			break;
 
 		case 5: // Upload the picture
-			if (distance(origin,me) > 0.54) {
+			if (distance(origin,me) > 0.53) {
 				game.uploadPic();
 				DEBUG(("I just uploaded %d picture(s).\n", picNum));
 				DEBUG(("I am in state %d.\n", state)); //Why the f**k does it say it's in State 3???
