@@ -175,7 +175,7 @@ void loop() {
 			if (picNum > 1) { // Doesn't take a picture, f(3x) and let u be 3x...
 				DEBUG(("%d picture(s) have been taken\n", picNum));
 				uploadCalc(uploadPos,POI);
-				haulAssTowardsTarget(uploadPos,1.5);
+				haulAssTowardsTarget(uploadPos,1.3);
 				state = 5;
 			}
 
@@ -198,7 +198,7 @@ void loop() {
 				//mathVecSubtract(facing,POI,me,3);
 				//mathVecNormalize(facing,3);
 				//api.setAttitudeTarget(facing);
-				haulAssTowardsTarget(uploadPos,1.5);
+				haulAssTowardsTarget(uploadPos,1.3);
 				game.takePic(POIID); // why the f**k not
 			}
 
