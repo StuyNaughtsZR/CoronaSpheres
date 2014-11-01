@@ -2,7 +2,7 @@ ZRState me;
 int state, tempstate, POIID, picNum, solarFlareBegin;
 float POI[3], uploadPos[3], facing[3];
 float target[3], origin[3];
-
+bool incoming_flare;
 int goodPOI[3]; //This array says which POIS are able to be gone to
 
 float originalVecBetween[3], waypoint[3],vecBetween[3],tempTarget[3];
@@ -13,10 +13,12 @@ void init() {
 	}
 	goodPOI[0] = 1;
 	goodPOI[1] = 1;
-	goodPOI[2] = 0;
+	goodPOI[2] = 1;
 	POIID = -1;
 	
 	solarFlareBegin = 1000;
+	
+	incoming_flare = true;
 	
     state = 0;
 }
@@ -25,15 +27,61 @@ void loop() {
 	
 	api.getMyZRState(me);
 	picNum = game.getMemoryFilled();
+	DEBUG(("%d picture(s) have been taken\n", picNum));
+	DEBUG(("STATE = %d\n",state));
+	DEBUG(("%d\n",incoming_flare));
 	
-	if((api.getTime() % 60 == 0)&&(api.getTime()>0)){
+	if((api.getTime() % 60 < 6)&&(api.getTime() > 10)){
 	    goodPOI[0] = 1;
-	    goodPOI[1] = 1;
-	    goodPOI[2] = 1;
+        goodPOI[1] = 1;
+        goodPOI[2] = 1;
 	    state = 6;
 	}
 	
+	if((api.getTime() == (solarFlareBegin - 1))&&(picNum == 0)){
+	    DEBUG(("I shall now reboot.\n"));
+	    if((solarFlareBegin+1)%60 < 6){
+	        goodPOI[0] = 1;
+            goodPOI[1] = 1;
+            goodPOI[2] = 1;
+	    }
+	    incoming_flare = false;
+		game.turnOff();
+		game.turnOn();
+		state = 0;
+	}
+    else if ((api.getTime() > (solarFlareBegin - 11))&&(incoming_flare)) {
+        if(api.getTime() > (solarFlareBegin - 6)&&(picNum == 0)){
+    	    DEBUG(("Slowing Down\n"));
+    		state = 7;
+        }
+        else{
+            if(state == 3){
+        	    DEBUG(("Upload\n"));
+        		state = 6;
+            }
+            if(picNum == 0){
+                DEBUG(("GETTING IN POSITION\n"));
+                state = 8;
+            }
+        }
+	}
 	
+	else if (game.getNextFlare() != -1) {
+	    solarFlareBegin = api.getTime() + game.getNextFlare();
+	    if(solarFlareBegin > api.getTime()+ 5){
+	        incoming_flare = true;
+	    }
+	    DEBUG(("Next solar flare will occur at %ds.\n", solarFlareBegin));
+	}
+	
+	else {
+	    DEBUG(("I don't know when the next flare is, so stop asking.\n"));
+	    solarFlareBegin = 1000; /*Fixes a glitch that makes game.getNextFlare()
+	    return 30s at some random point in the beginning of the game,
+	    and from then on return -1 until the next actual flare, so that the 
+	    SPHERE reboots for no reason.*/
+	}
 		        
 	switch (state) {
 		case 0: // POI Selection
@@ -65,6 +113,7 @@ void loop() {
 		case 2: // First Pic in Outer Zone
 		    mathVecSubtract(facing,POI,me,3);
 			mathVecNormalize(facing,3);
+			api.setAttitudeTarget(facing);
 		    api.setAttitudeTarget(facing);
 		    toTarget();
 		    if(game.alignLine(POIID)){
@@ -79,6 +128,7 @@ void loop() {
 			break;
 			
         case 3: //set target to inner zone
+            DEBUG(("GOING TO INNER"));
 		    for(int i = 0; i < 3; i++){ 
 		        target[i] = POI[i]*0.38/mathVecMagnitude(POI,3);
 		    }
@@ -101,7 +151,12 @@ void loop() {
 		    mathVecSubtract(facing,POI,me,3);
 			mathVecNormalize(facing,3);
 			api.setAttitudeTarget(facing);
-		    toTarget();
+		    if(distance(me,target)>0.06){
+	            haulAssTowardTarget(target,2);
+	        }
+	        else{
+	            api.setPositionTarget(target);
+	        }
 		    if(game.alignLine(POIID)){
 		        if(distance(me,origin)<0.42){
 		            game.takePic(POIID);
@@ -131,7 +186,12 @@ void loop() {
                 game.uploadPic();
             }
             else{
-                api.setPositionTarget(uploadPos);
+                if(distance(me,origin)>0.51){
+                    api.setPositionTarget(uploadPos);
+                }
+                else{
+                    haulAssTowardTarget(uploadPos,1.8);
+                }
             }
             if(picNum == 0){
                 DEBUG(("LOOKING FOR POI"));
@@ -140,6 +200,22 @@ void loop() {
 		    break;
 		case 7: //stop because of flare
 		    api.setPositionTarget(me);
+		    for(int i = 0; i < 3; i++){ 
+		        facing[i] = me[i+3];
+		    }
+		    mathVecNormalize(facing,3);
+			api.setAttitudeTarget(facing);
+		    break;
+		case 8:
+		    float temp[3];
+		    target[0] = -0.35;
+		    target[1] = 0.00;
+		    target[2] = 0.00;
+		    mathVecSubtract(temp,target,me,3);
+		    for(int i = 0; i < 3; i++){ 
+		        temp[i] = 0.02*temp[i]/mathVecMagnitude(temp,3);
+		    }
+		    api.setVelocityTarget(temp);
 		    break;
 	}
 }
@@ -149,11 +225,18 @@ void loop() {
 bool goToWaypoint(float target[],float waypoint[],float tempTarget[], float originalVecBetween[]){
             mathVecSubtract(vecBetween, waypoint, me, 3);
 	        float temp[3];
-    	    dilateValue(waypoint,tempTarget, -1.04,tempTarget);
+	        //for(int i = 0; i < 3; i++){
+    	    //        temp[i] = 1.5*me[i+2];
+    	    //}
+    	    //if(angleBetween(me,target) > 150 *PI / 180){
+    	    //    dilateValue(waypoint,tempTarget, -1.1,tempTarget);
+    	    //}
+    	    //else{
+    	        dilateValue(waypoint,tempTarget, -1.04,tempTarget);
+    	    //}
 	        if(pathToTarget(me,tempTarget,temp)){
 	            api.setVelocityTarget(originalVecBetween); 
 	                                   //magnitude stays the same as beginning magnitude
-	            DEBUG(("Going to waypoint"));
 	            return true; //going to waypoint still
 	        }
 	        else{
@@ -173,11 +256,6 @@ void setWaypoint(float waypoint[],float originalVecBetween[]){
     	                }
     	            }
     	            mathVecSubtract(originalVecBetween, waypoint, me, 3); 
-    	            if(mathVecMagnitude(originalVecBetween,3)>0.60){
-    	                for(int i=0; i < 3; i++){
-    	                    originalVecBetween[i] = 0.60*originalVecBetween[i]/mathVecMagnitude(originalVecBetween,3);
-    	                }
-    	            }
 }
 void toTarget(){
 	        if(distance(me,target)>0.08){
@@ -264,7 +342,8 @@ float angleBetween(float pt1[3], float pt2[3]){
     return acosf(dot);
 }
 void haulAssTowardTarget(float target[], float scalar) {
-        float scaledTarget[3];
-        for (int i = 0; i < 3; i++) scaledTarget[i] = me[i] + scalar * (target[i] - me[i]);
-        api.setPositionTarget(scaledTarget);
+    // makes you go in the direction of target, but scalar times faster
+    float scaledTarget[3];
+    for (int i = 0; i < 3; i++) scaledTarget[i] = me[i] + scalar * (target[i] - me[i]);
+    api.setPositionTarget(scaledTarget);
 }
