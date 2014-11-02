@@ -29,7 +29,6 @@ void loop() {
 	picNum = game.getMemoryFilled();
 	DEBUG(("%d picture(s) have been taken\n", picNum));
 	DEBUG(("STATE = %d\n",state));
-	DEBUG(("%d\n",incoming_flare));
 	
 	if((api.getTime() % 60 < 6)&&(api.getTime() > 10)){
 	    goodPOI[0] = 1;
@@ -57,11 +56,9 @@ void loop() {
         }
         else{
             if(state == 3){
-        	    DEBUG(("Upload\n"));
         		state = 6;
             }
             if(picNum == 0){
-                DEBUG(("GETTING IN POSITION\n"));
                 state = 8;
             }
         }
@@ -76,7 +73,7 @@ void loop() {
 	}
 	
 	else {
-	    DEBUG(("I don't know when the next flare is, so stop asking.\n"));
+	    DEBUG(("I don't know when the next flare is, so stop asking.\n")); //yeech got attitude
 	    solarFlareBegin = 1000; /*Fixes a glitch that makes game.getNextFlare()
 	    return 30s at some random point in the beginning of the game,
 	    and from then on return -1 until the next actual flare, so that the 
