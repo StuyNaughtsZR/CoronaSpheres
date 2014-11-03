@@ -2,7 +2,6 @@ ZRState me;
 int state, tempstate, POIID, picNum, solarFlareBegin;
 float POI[3], uploadPos[3], facing[3];
 float target[3], origin[3];
-bool incoming_flare;
 int goodPOI[3]; //This array says which POIS are able to be gone to
 
 float originalVecBetween[3], waypoint[3],vecBetween[3],tempTarget[3];
@@ -18,8 +17,6 @@ void init() {
 	
 	solarFlareBegin = 1000;
 	
-	incoming_flare = true;
-	
     state = 0;
 }
 
@@ -30,7 +27,7 @@ void loop() {
 	DEBUG(("%d picture(s) have been taken\n", picNum));
 	DEBUG(("STATE = %d\n",state));
 	
-	if((api.getTime() % 60 < 6)&&(api.getTime() > 10)){
+	if((api.getTime() % 60 == 0)&&(api.getTime() > 10)){
 	    goodPOI[0] = 1;
         goodPOI[1] = 1;
         goodPOI[2] = 1;
@@ -44,12 +41,11 @@ void loop() {
             goodPOI[1] = 1;
             goodPOI[2] = 1;
 	    }
-	    incoming_flare = false;
 		game.turnOff();
 		game.turnOn();
-		state = 0;
+		state = 0;  //is this really supposed to be 0?
 	}
-    else if ((api.getTime() > (solarFlareBegin - 11))&&(incoming_flare)) {
+    else if ((api.getTime() > (solarFlareBegin - 11))&&(api.getTime() < (solarFlareBegin))) {
         if(api.getTime() > (solarFlareBegin - 6)&&(picNum == 0)){
     	    DEBUG(("Slowing Down\n"));
     		state = 7;
@@ -66,9 +62,6 @@ void loop() {
 	
 	else if (game.getNextFlare() != -1) {
 	    solarFlareBegin = api.getTime() + game.getNextFlare();
-	    if(solarFlareBegin > api.getTime()+ 5){
-	        incoming_flare = true;
-	    }
 	    DEBUG(("Next solar flare will occur at %ds.\n", solarFlareBegin));
 	}
 	
@@ -225,12 +218,12 @@ bool goToWaypoint(float target[],float waypoint[],float tempTarget[], float orig
 	        //for(int i = 0; i < 3; i++){
     	    //        temp[i] = 1.5*me[i+2];
     	    //}
-    	    //if(angleBetween(me,target) > 150 *PI / 180){
-    	    //    dilateValue(waypoint,tempTarget, -1.1,tempTarget);
-    	    //}
-    	    //else{
-    	        dilateValue(waypoint,tempTarget, -1.04,tempTarget);
-    	    //}
+    	    if(angleBetween(me,target) > 150 *PI / 180){
+    	        dilateValue(waypoint,tempTarget, -1.15,tempTarget);
+    	    }
+    	    else{
+    	        dilateValue(waypoint,tempTarget, -1.05,tempTarget);
+    	    }
 	        if(pathToTarget(me,tempTarget,temp)){
 	            api.setVelocityTarget(originalVecBetween); 
 	                                   //magnitude stays the same as beginning magnitude
