@@ -2,7 +2,7 @@
 // Not to be confused with the Da Vinci Code
 
 ZRState me;
-int state, POIID, picNum, solarFlareBegin;
+int state, POIID, solarFlareBegin;
 float POI[3],otherPOI1[3],otherPOI2[3],destination[3],facing[3],dis;
 
 void init() {
@@ -15,8 +15,6 @@ void loop() {
 	
 	api.getMyZRState(me);
 
-	picNum = game.getMemoryFilled();
-
 	if(api.getTime() % 60 == 0 && state != 3) state = 0;
 
 	rebootIfStorm();
@@ -25,8 +23,8 @@ void loop() {
 
 	DEBUG(("I can still take %d photos.\n", game.getMemorySize() - game.getMemoryFilled()));
 	
-	if (state == 0) {
-	    // POI Selection
+	if (state == 0) {// POI Selection
+	
 		game.getPOILoc(POI,0);
 		game.getPOILoc(otherPOI1,1);
 		game.getPOILoc(otherPOI2,2);
@@ -59,24 +57,23 @@ void loop() {
 		
 	}
 
-	if (state == 1) {
-	    // Take pic in inner zone
-		if (!AreWeThereYet(destination,0.01,0.01)) {
+	if (state == 1) {// Take pic in inner zone
+	
+		if (!AreWeThereYet(destination,0.05,0.05)) {
 		    setPositionTarget(destination);
 		    mathVecSubtract(facing,POI,me,3);
+		    if (mathVecMagnitude(facing,3) > 0.4) api.setVelocityTarget(facing);
 		    mathVecNormalize(facing,3);
 		    api.setAttitudeTarget(facing);
 		}
-		else DEBUG(("Alignment achieved."));
+		else game.takePic(POIID);
 		
-		game.takePic(POIID);
-		
-		if (picNum > 0) {
-			DEBUG(("%d picture(s) have been taken\n", picNum));
+		if (game.getMemoryFilled() > 0 && mathVecMagnitude(me, 3) < 0.42) {
+			DEBUG(("%d picture(s) have been taken\n", game.getMemoryFilled()));
 			for (int i = 0; i < 3; i++) {
 				destination[i] = POI[i] * 0.43 / mathVecMagnitude(POI,3);
 		    }
-			setPositionTarget(destination);
+			setPositionTarget(destination,3);
 			mathVecSubtract(facing,POI,me,3);
 			mathVecNormalize(facing,3);
     		api.setAttitudeTarget(facing);
@@ -86,45 +83,42 @@ void loop() {
 		
 	}
 
-	if (state == 2) {
-	    // Take pic in outer zone
-        if (!AreWeThereYet(destination,0.01,0.01)) {
+	if (state == 2) {// Take pic in outer zone
+	
+        if (!AreWeThereYet(destination,0.05,0.05)) {
 		    setPositionTarget(destination);
 		    mathVecSubtract(facing,POI,me,3);
 		    mathVecNormalize(facing,3);
 		    api.setAttitudeTarget(facing);
 		}
-		else DEBUG(("Alignment achieved."));
+		else game.takePic(POIID);
 		
-		game.takePic(POIID);
-		
-		if (picNum > 1) {
-			DEBUG(("%d picture(s) have been taken\n", picNum));
+		if (game.getMemoryFilled() > 1) {
+			DEBUG(("%d picture(s) have been taken\n", game.getMemoryFilled()));
 			for (int i = 0; i < 3; i++) {
-	        	destination[i] = POI[i] * 0.6 / mathVecMagnitude(POI,3);
+	        	destination[i] = me[i] * 0.61 / mathVecMagnitude(me,3);
 	        }
-			api.setPositionTarget(destination);
+			setPositionTarget(destination,3);
 
 			state = 3;
 		}
 		
 	}
 
-	if (state == 3) {
-	    // Upload the picture
-		if (AreWeThereYet(destination,0.01,0.01)) {
+	if (state == 3) {// Upload the picture
+	
+		if (mathVecMagnitude(me,3)>0.53) {
+		    int picNum = game.getMemoryFilled();
 			game.uploadPic();
-			DEBUG(("I just uploaded %d picture(s).\n", picNum));
-			DEBUG(("I am in state %d.\n", state)); //Why the f**k does it say it's in State 3???
+			DEBUG(("I just uploaded %d picture(s).\n", (picNum - game.getMemoryFilled())));
 			state = 0;
 		}
 	
 		else {
-			//mathVecSubtract(facing,POI,me,3);
-			//mathVecNormalize(facing,3);
-			//api.setAttitudeTarget(facing);
+			for (int i = 0; i < 3; i++) {
+	        	destination[i] = me[i] * 0.61 / mathVecMagnitude(me,3);
+	        }
 			api.setPositionTarget(destination);
-			game.takePic(POIID); // why the f**k not
 		}
 
 	}
@@ -174,24 +168,26 @@ void mathVecProject(float c[], float a[], float b[], int n) {
     }
 }
 
+void setPositionTarget(float target[3], float multiplier) {
+    float temp[3];
+    mathVecSubtract(temp,target,me,3);
+    for (int i = 0; i < 3; i++) temp[i] = me[i] + temp[i] * multiplier;
+    setPositionTarget(temp);
+}
+
 void setPositionTarget(float target[3]) {
 	api.getMyZRState(me);
 	
-	float myPos[3],meMag,zero[3],cross[3],inner;
+	float myPos[3],meMag;
 	
 	for(int i = 0; i < 3; i++) {
 		myPos[i] = me[i];
-		zero[i] = 0.0;
 	}
 	
 	meMag = mathVecMagnitude(myPos,3);
 	
-	mathVecCross(cross,myPos,target);
-	inner = mathVecInner(myPos,target,3);
-
 	if (minDistanceFromOrigin(target) > 0.31) {
 		api.setPositionTarget(target);
-		DEBUG(("JUST GO!!!\n"));
 	}
 	
 	else if (meMag >= 0.22 && meMag <= 0.32) {
@@ -203,20 +199,8 @@ void setPositionTarget(float target[3]) {
 		DEBUG(("TOO CLOSE\n"));
 	}
 	
-	else if (mathVecMagnitude(cross,3) < 0.05 && inner > 0.95 && inner < 1.05) {
-		api.setPositionTarget(target);
-		DEBUG(("GOOD COLLINEARITY DETECTED\n"));
-	}
-	
-	else if (mathVecMagnitude(cross,3) < 0.01 && inner < -0.99 && inner > -1.01) {
-		api.setPositionTarget(myPos);
-		DEBUG(("BAD COLLINEARITY DETECTED\n"));
-	}
-	
 	else {
 		float opposite[3], perpendicular[3], mePrep[3], path[3], temp[3];
-		
-		
 		
 		mathVecProject(opposite,target,myPos,3);
 		mathVecSubtract(perpendicular,target,opposite,3);
