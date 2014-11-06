@@ -1,4 +1,13 @@
+//STUFFS TO DO
+//IMPROVE GOTOTARGET
+//OPTIMIZATION IN OUTER TO UPLOAD
+//if(distance(me,origin) < 0.313)
+//change attitude target when turning off
+//if POI change about to happen don't go for pictures
+//out of bounds emergency 
+
 ZRState me;
+ZRState enemy;
 int state, tempstate, POIID, picNum, solarFlareBegin;
 float POI[3], uploadPos[3], facing[3];
 float target[3], origin[3];
@@ -16,17 +25,17 @@ void init() {
 	POIID = -1;
 	
 	solarFlareBegin = 1000;
-	
+	DEBUG(("Greetings from Stuy-Naught"));
     state = 0;
 }
 
 void loop() {
 	
 	api.getMyZRState(me);
+	api.getMyZRState(enemy);
 	picNum = game.getMemoryFilled();
 	DEBUG(("%d picture(s) have been taken\n", picNum));
 	DEBUG(("STATE = %d\n",state));
-	DEBUG(("ARRAY = %d,%d,%d\n",goodPOI[0],goodPOI[1],goodPOI[2]));
 	
 	if((api.getTime() % 60 == 0)&&(api.getTime() > 10)){
 	    goodPOI[0] = 1;
@@ -34,7 +43,20 @@ void loop() {
         goodPOI[2] = 1;
 	    state = 6;
 	}
-	
+	if (api.getTime() > 226) { 
+	    if(state == 3){ 
+	        state = 6; 
+	        
+	    } 
+	}
+	if (api.getTime() + 5 % 60 == 0){
+	    if((state == 0)||(state == 1)||(state == 2)){
+	        state = 8;
+	    }
+	    if(state == 3){
+	        state = 6;
+	    }
+	}
 	flareAvoid();
 		        
 	switch (state) {
@@ -49,7 +71,6 @@ void loop() {
 		        target[i] = POI[i]*0.475/mathVecMagnitude(POI,3);
 		    }
 			toTarget();
-		    DEBUG(("Outer Zone Coors = %f,%f,%f\n",target[0],target[1],target[2]));
 			mathVecSubtract(facing,POI,me,3);
 			mathVecNormalize(facing,3);
 			api.setAttitudeTarget(facing);
@@ -83,7 +104,6 @@ void loop() {
 			break;
 			
         case 3: //set target to inner zone
-            DEBUG(("GOING TO INNER"));
 		    for(int i = 0; i < 3; i++){ 
 		        target[i] = POI[i]*0.38/mathVecMagnitude(POI,3);
 		    }
@@ -106,8 +126,8 @@ void loop() {
 		    mathVecSubtract(facing,POI,me,3);
 			mathVecNormalize(facing,3);
 			api.setAttitudeTarget(facing);
-		    if(distance(me,target)>0.06){
-	            haulAssTowardTarget(target,2);
+		    if(distance(me,target)>0.03){
+	            haulAssTowardTarget(target,5);
 	        }
 	        else{
 	            api.setPositionTarget(target);
@@ -145,7 +165,7 @@ void loop() {
                     api.setPositionTarget(uploadPos);
                 }
                 else{
-                    haulAssTowardTarget(uploadPos,1.8);
+                    haulAssTowardTarget(uploadPos,1.9);
                 }
             }
             if(picNum == 0){
@@ -242,7 +262,7 @@ bool goToWaypoint(float target[],float waypoint[],float tempTarget[], float orig
 
 void toTarget(){
 	        if(distance(me,target)>0.08){
-	            haulAssTowardTarget(target,2);
+	            haulAssTowardTarget(target,2.5);
 	        }
 	        else{
 	            api.setPositionTarget(target);
@@ -282,9 +302,8 @@ void flareAvoid(){
 		game.turnOn();
 		state = 0;  //is this really supposed to be 0?
 	}
-    else if ((api.getTime() > (solarFlareBegin - 11))&&(api.getTime() < (solarFlareBegin))) {
+    else if ((api.getTime() > (solarFlareBegin - 14))&&(api.getTime() < (solarFlareBegin))) {
         if(api.getTime() > (solarFlareBegin - 6)&&(picNum == 0)){
-    	    DEBUG(("Slowing Down\n"));
     		state = 7;
         }
         else{
@@ -297,6 +316,7 @@ void flareAvoid(){
         }
 	}
 }
+
 float distance(float p1[], float p2[]){
     float d=0;
     for(int i = 0; i<3; i++){
