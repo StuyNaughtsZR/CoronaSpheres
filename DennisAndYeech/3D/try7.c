@@ -2,8 +2,8 @@
 // Not to be confused with the Da Vinci Code
 
 ZRState me;
-int state, POIID, solarFlareBegin;
-float POI[3],otherPOI1[3],otherPOI2[3],destination[3],facing[3],dis;
+int state, POIID, solarFlareBegin, picNum;
+float POI[3],otherPOI1[3],otherPOI2[3],destination[3],facing[3];
 
 void init() {
 
@@ -49,65 +49,81 @@ void loop() {
 		
 		DEBUG(("POI Coors = %f,%f,%f\n",POI[0],POI[1],POI[2]));
 	
-		for (int i = 0; i < 3; i++) {
-			destination[i] = POI[i] * 0.38 / mathVecMagnitude(POI,3); //inner
-		}
-
 		state = 1;
 		
 	}
 
-	if (state == 1) {// Take pic in inner zone
+	if (state == 1) {// Take pic in outer zone
 	
-		if (!AreWeThereYet(destination,0.05,0.05)) {
-		    setPositionTarget(destination);
+		if (mathVecMagnitude(me,3) > 0.42) {
+		    
 		    mathVecSubtract(facing,POI,me,3);
-		    if (mathVecMagnitude(facing,3) > 0.4) api.setVelocityTarget(facing);
-		    mathVecNormalize(facing,3);
-		    api.setAttitudeTarget(facing);
+		    
+    		if (mathVecMagnitude(me,3) < 0.53 && angleBetween(me, facing) > 2.94159265359) {
+    		    //angle is greater than pi-0.2
+	            picNum = game.getMemoryFilled();
+		        game.takePic(POIID);
+		        if (game.getMemoryFilled() - picNum == 1) {
+		            DEBUG(("I just took a picture in the outer zone.\n"));
+		            state = 2;
+		            if (game.getMemoryFilled() == 2) state = 3;
+		        }
+    		}
+    		    
+    		else {
+    		    for (int i = 0; i < 3; i++) {
+    		        destination[i] = POI[i] * 0.43 / mathVecMagnitude(POI, 3);
+    		    }
+                if (mathVecMagnitude(facing,3) > 0.4) {
+                    DEBUG(("Hauling ass!\n"));
+                    setPositionTarget(destination, 2);
+                }
+                else setPositionTarget(destination);
+    		}
+    		
+    		mathVecNormalize(facing,3);
+            api.setAttitudeTarget(facing);
+	    	
 		}
-		else game.takePic(POIID);
 		
-		if (game.getMemoryFilled() > 0 && mathVecMagnitude(me, 3) < 0.42) {
-			DEBUG(("%d picture(s) have been taken\n", game.getMemoryFilled()));
-			for (int i = 0; i < 3; i++) {
-				destination[i] = POI[i] * 0.43 / mathVecMagnitude(POI,3);
-		    }
-			setPositionTarget(destination,3);
-			mathVecSubtract(facing,POI,me,3);
-			mathVecNormalize(facing,3);
-    		api.setAttitudeTarget(facing);
-
-			state = 2;
-		}
+		else state = 2;
 		
 	}
 
-	if (state == 2) {// Take pic in outer zone
+	if (state == 2) {// Take pic in inner zone
 	
-        if (!AreWeThereYet(destination,0.05,0.05)) {
-		    setPositionTarget(destination);
-		    mathVecSubtract(facing,POI,me,3);
-		    mathVecNormalize(facing,3);
-		    api.setAttitudeTarget(facing);
-		}
-		else game.takePic(POIID);
-		
-		if (game.getMemoryFilled() > 1) {
-			DEBUG(("%d picture(s) have been taken\n", game.getMemoryFilled()));
-			for (int i = 0; i < 3; i++) {
-	        	destination[i] = me[i] * 0.61 / mathVecMagnitude(me,3);
-	        }
-			setPositionTarget(destination,3);
-
-			state = 3;
-		}
+	    mathVecSubtract(facing,POI,me,3);
+	
+        if (mathVecMagnitude(me,3) < 0.42 && angleBetween(me, facing) > 2.74159265359) {
+            //angle is greater than pi-0.4
+	        picNum = game.getMemoryFilled();
+		    game.takePic(POIID);
+		    if (game.getMemoryFilled() - picNum == 1) {
+		        DEBUG(("I just took a picture in the inner zone.\n"));
+		        state = 3;
+		        if (game.getMemoryFilled() == 1) state = 1;
+		    }
+        }
+        
+        else {
+    	    for (int i = 0; i < 3; i++) {
+    	        destination[i] = POI[i] * 0.32 / mathVecMagnitude(POI, 3);
+    	    }
+            if (mathVecMagnitude(facing,3) > 0.4) {
+                DEBUG(("Hauling ass!\n"));
+                setPositionTarget(destination, 2);
+            }
+            else setPositionTarget(destination);
+    	}
+    	
+    	mathVecNormalize(facing,3);
+        api.setAttitudeTarget(facing);
 		
 	}
 
 	if (state == 3) {// Upload the picture
 	
-		if (mathVecMagnitude(me,3)>0.53) {
+		if (mathVecMagnitude(me,3) > 0.53) {
 		    int picNum = game.getMemoryFilled();
 			game.uploadPic();
 			DEBUG(("I just uploaded %d picture(s).\n", (picNum - game.getMemoryFilled())));
@@ -128,6 +144,7 @@ void loop() {
 void rebootIfStorm() {
     if (api.getTime() == (solarFlareBegin - 1)) {
 	    DEBUG(("I shall now reboot.\n"));
+        setPositionTarget(me); //prevents crashing during reboot
 		game.turnOff();
 		game.turnOn();
 		state = 0;
@@ -168,6 +185,23 @@ void mathVecProject(float c[], float a[], float b[], int n) {
     }
 }
 
+float angleBetween(float a[], float b[]) {
+    //returns the measure of the angle between vectors a and b
+    return acosf(mathVecInner(a, b, 3) / (mathVecMagnitude(a,3) * mathVecMagnitude(b,3)));
+}
+
+float angle(float a[], float b[], float c[]) {
+    //returns the measure of angle abc
+    float side1[3], side2[3], cosine;
+    for (int i = 0; i < 3; i++) side1[i] = a[i] - c[i];
+    cosine = - mathVecMagnitude(side1,3) * mathVecMagnitude(side1,3);
+    for (int i = 0; i < 3; i++) side1[i] = b[i] - a[i];
+    for (int i = 0; i < 3; i++) side2[i] = c[i] - b[i];
+    cosine += mathVecMagnitude(side1,3) * mathVecMagnitude(side1,3) + mathVecMagnitude(side2,3) * mathVecMagnitude(side2,3);
+    cosine /= 2 * mathVecMagnitude(side1,3) * mathVecMagnitude(side2,3);
+    return acosf(cosine);
+}
+
 void setPositionTarget(float target[3], float multiplier) {
     float temp[3];
     mathVecSubtract(temp,target,me,3);
@@ -176,54 +210,46 @@ void setPositionTarget(float target[3], float multiplier) {
 }
 
 void setPositionTarget(float target[3]) {
-	api.getMyZRState(me);
+	float temp[3];
 	
-	float myPos[3],meMag;
-	
-	for(int i = 0; i < 3; i++) {
-		myPos[i] = me[i];
-	}
-	
-	meMag = mathVecMagnitude(myPos,3);
-	
-	if (minDistanceFromOrigin(target) > 0.31) {
+	if (distance(me,target) < 0.01) {
 		api.setPositionTarget(target);
 	}
 	
-	else if (meMag >= 0.22 && meMag <= 0.32) {
-		for (int i = 0; i < 3; i++) {
-			myPos[i] = myPos[i] * 1.6;
-		}
-		
-		api.setPositionTarget(myPos);
-		DEBUG(("TOO CLOSE\n"));
+	if (minDistanceFromOrigin(target) > 0.32) {
+		api.setPositionTarget(target);
+	}
+
+	else if (mathVecMagnitude(me,3) >= 0.22 && mathVecMagnitude(me,3) <= 0.32) {
+		for (int i = 0; i < 3; i++) temp[i] = me[i] * 1.6;
+		api.setPositionTarget(temp);
+		DEBUG(("Danger!\n"));
 	}
 	
 	else {
-		float opposite[3], perpendicular[3], mePrep[3], path[3], temp[3];
+		float newTarget[3];
 		
-		mathVecProject(opposite,target,myPos,3);
-		mathVecSubtract(perpendicular,target,opposite,3);
+		mathVecProject(temp,target,me,3);
+		mathVecSubtract(temp,target,temp,3);
 		
 		for (int i = 0; i < 3; i++) {
-		    mePrep[i] = perpendicular[i] / mathVecMagnitude(perpendicular,3);
+		    newTarget[i] = temp[i] / mathVecMagnitude(temp,3) * 1.1;
 		}
 		
 		for (int i = 0; i < 3; i++) {
-			mePrep[i] = (mePrep[i] * 0.325 * meMag) / (sqrtf(meMag*meMag - 0.32*0.32));
+			newTarget[i] *= sqrtf(1 / (1/(0.32 * 0.32) - 1/(mathVecMagnitude(me,3) * mathVecMagnitude(me,3))));
 		}
 		
-		mathVecSubtract(path,mePrep,myPos,3);
+		mathVecSubtract(temp,newTarget,me,3);
 		
-		for (int i = 0; i < 3; i++) {
-			path[i] = path[i] * 2;
-		}
+		mathVecSubtract(newTarget,target,me,3);
+		for (int i = 0; i < 3; i++) temp[i] *= mathVecMagnitude(newTarget,3);
 		
-		mathVecAdd(temp,myPos,path,3);
+		mathVecAdd(temp,me,temp,3);
 
 		api.setPositionTarget(temp);
 		
-		DEBUG(("TAKING THE TANGENT\n"));
+		DEBUG(("Taking the tangent.\n"));
 	}
 }
 
@@ -233,28 +259,23 @@ int AreWeThereYet(float target[3], float maxDis, float maxSpeed) {
 }
 
 float minDistanceFromOrigin(float target[]) {
-	float path1[3], path2[3], cosine;
+	float temp[3];
 	
-	mathVecSubtract(path1,target,me,3);
-	mathVecSubtract(path2,me,target,3);
+	for (int i = 0; i < 3; i++) temp[i] = 0;
 	
-	cosine = mathVecInner(path1,me,3) / (mathVecMagnitude(path1, 3) * mathVecMagnitude(me, 3));
-	
-	if (cosine < 0) {
+	if (cosf(angle(temp,me,target)) < 0) { //going away from origin
 		return mathVecMagnitude(me, 3);
 	}
 	
-	cosine = mathVecInner(path2,target,3) / (mathVecMagnitude(path2, 3) * mathVecMagnitude(target, 3));
-	
-	if (cosine < 0) {
+	else if (cosf(angle(temp,target,me)) < 0) { //going in direction of origin
 		return mathVecMagnitude(target,3);
 	}
 	
-	else {
-		mathVecProject(path2,me,path1,3);
+	else { //asteroid is in the way
+	    mathVecSubtract(temp,target,me,3);
+	    mathVecProject(temp,me,temp,3);
+		mathVecSubtract(temp,me,temp,3);
 		
-		mathVecSubtract(path1,me,path2,3);
-		
-		return mathVecMagnitude(path1,3);
+		return mathVecMagnitude(temp,3);
 	}
 }
