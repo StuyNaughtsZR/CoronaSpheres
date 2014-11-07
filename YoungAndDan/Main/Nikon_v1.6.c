@@ -115,7 +115,7 @@ void loop() {
 		    }
 		    else{
     			if(distance(me,target)>0.05){
-    	            setPositionTarget(target,2.5);
+    	            setPositionTarget(target,2);
     	        }
     	        else{
     	            setPositionTarget(target);
