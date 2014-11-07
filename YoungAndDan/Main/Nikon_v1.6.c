@@ -42,7 +42,12 @@ void loop() {
 	DEBUG(("%d picture(s) have been taken\n", picNum));
 	DEBUG(("STATE = %d\n",state));
 	DEBUG(("Attempts = %d\n", attempts));
-	
+	if(distance(me,origin)<0.36){
+	    for(int i = 0; i < 3; i++){ 
+		        uploadPos[i] = me[i] / mathVecMagnitude(me, 3) * 0.65;
+		}
+		api.setPositionTarget(uploadPos);
+	}
 	if((api.getTime() % 60 == 0)&&(api.getTime() > 10)){
 	    goodPOI[0] = 1;
         goodPOI[1] = 1;
@@ -221,7 +226,7 @@ void loop() {
 		case 7: //stop because of flare
 		    api.setPositionTarget(me);
 		    for(int i = 0; i < 3; i++){ 
-		        facing[i] = me[i];
+		        facing[i] = me[i+3];
 		    }
 		    mathVecNormalize(facing,3);
 			api.setAttitudeTarget(facing);
@@ -274,7 +279,7 @@ void flareAvoid(){
 	    }
 	    api.setPositionTarget(me);
 		for(int i = 0; i < 3; i++){ 
-		   facing[i] = me[i];
+		   facing[i] = me[i+3];
 		}
 		mathVecNormalize(facing,3);
 		api.setAttitudeTarget(facing);
@@ -294,6 +299,10 @@ void flareAvoid(){
                 state = 6;
             }
         }
+	}
+	else if (game.getNextFlare() != -1) {
+	    solarFlareBegin = api.getTime() + game.getNextFlare();
+	    DEBUG(("Next solar flare will occur at %ds.\n", solarFlareBegin));
 	}
 }
 
