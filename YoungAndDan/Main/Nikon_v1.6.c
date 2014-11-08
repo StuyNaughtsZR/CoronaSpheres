@@ -226,11 +226,6 @@ void loop() {
 		    break;
 		case 7: //stop because of flare
 		    api.setPositionTarget(me);
-		    for(int i = 0; i < 3; i++){ 
-		        facing[i] = me[i+3];
-		    }
-		    mathVecNormalize(facing,3);
-			api.setAttitudeTarget(facing);
 		    break;
 		    
 		case 8: //getInPosition for next cycle
