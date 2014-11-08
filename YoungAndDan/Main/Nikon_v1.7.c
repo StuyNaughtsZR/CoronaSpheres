@@ -35,7 +35,7 @@ void init() {
 void loop() {
 	
 	api.getMyZRState(me);
-	api.getMyZRState(enemy);
+	api.getOtherZRState(enemy);
 	picNum = game.getMemoryFilled();
 	DEBUG(("%d picture(s) have been taken\n", picNum));
 	DEBUG(("STATE = %d\n",state));
@@ -48,19 +48,9 @@ void loop() {
 		api.setPositionTarget(uploadPos);
 	}
 	if((api.getTime() % 60 == 0)&&(api.getTime() > 10)){
-	    int ePOIID;
 	    goodPOI[0] = 1;
         goodPOI[1] = 1;
         goodPOI[2] = 1;
-		closestPOI(enemy,goodPOI,POI);
-		DEBUG(("THEIR POI:%d",POIID));
-		ePOIID = POIID;
-		closestPOI(me,goodPOI,POI);
-		DEBUG(("OUR POI:%d",POIID));
-		if(POIID != ePOIID){
-		    DEBUG(("GOING INNER->OUTER\n"));
-			first = true;
-		}
 	    state = 6; //should this be 6???????????????????????????????????????????????????????????????????????????
 	}
 	if (api.getTime() > 226) { 
@@ -80,7 +70,14 @@ void loop() {
 		        
 	switch (state) {
 		case 0: // POI Selection
+		    int ePOIID;
+		    closestPOI(enemy,goodPOI,POI);
+		    ePOIID = POIID;
 			closestPOI(me,goodPOI,POI);
+			if(POIID != ePOIID){
+    		    DEBUG(("GOING INNER->OUTER\n"));
+    			first = true;
+		    }
 			DEBUG(("POI Coors = %f,%f,%f\n",POI[0],POI[1],POI[2]));
 			if(first){
 			    state = 3;
@@ -196,6 +193,7 @@ void loop() {
 		        if(picNum == 1){
 		            attempts = 0;
                     DEBUG(("PICTURE IN INNER ZONE TAKEN\n"));
+                    goodPOI[POIID] = 0;
                     state = 1;
                 }
 		    }
@@ -203,6 +201,7 @@ void loop() {
                 if(picNum > 1){
                     attempts = 0;
                     DEBUG(("PICTURE IN INNER ZONE TAKEN\n"));
+                    goodPOI[POIID] = 0;
                     state = 6;
                 }
 		    }
@@ -244,7 +243,7 @@ void loop() {
 }
 
 //SIDECHAINS
-void closestPOI(float me[],int goodPOIS[], float nextPOI[]){ 
+void closestPOI(float a[],int goodPOIS[], float nextPOI[]){ 
     //nextPOI should be 3 float array
     float distances[3] = {0.00, 0.00, 0.00};
     for(int i = 0; i<3; i++){
@@ -254,7 +253,7 @@ void closestPOI(float me[],int goodPOIS[], float nextPOI[]){
         else{
             float POIN[3] = {0.00, 0.00, 0.00};
             game.getPOILoc(POIN, i);
-            distances[i] = distance(me,POIN);
+            distances[i] = distance(a,POIN);
         }
     }
     float shortestdistance = 50.00;  //placeholder number
