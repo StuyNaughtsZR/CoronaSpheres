@@ -42,7 +42,8 @@ void loop() {
 	DEBUG(("%d picture(s) have been taken\n", picNum));
 	DEBUG(("STATE = %d\n",state));
 	DEBUG(("Attempts = %d\n", attempts));
-	if(distance(me,origin)<0.36){
+	if(distance(me,origin)<0.32){
+	    DEBUG(("Too Close!"));
 	    for(int i = 0; i < 3; i++){ 
 		        uploadPos[i] = me[i] / mathVecMagnitude(me, 3) * 0.65;
 		}
