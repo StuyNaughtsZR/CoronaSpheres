@@ -116,7 +116,7 @@ void loop() {
     	            setPositionTarget(target,3);
     	        }
     	        else{
-    	            setPositionTarget(target);
+    	            setPositionTarget(target,1);
     	        }
 		    }
 		    else{
@@ -124,7 +124,7 @@ void loop() {
     	            setPositionTarget(target,2);
     	        }
     	        else{
-    	            setPositionTarget(target);
+    	            setPositionTarget(target,1);
     	        }
 		    }
     		if(game.alignLine(POIID)&&(distance(me,origin)>0.475)){
@@ -155,7 +155,7 @@ void loop() {
 		        target[i] = POI[i]*0.38/mathVecMagnitude(POI,3);
 		    }		
 		    target[0] += 0.008;
-		    setPositionTarget(target);
+		    //setPositionTarget(target,1); <-- Why need this???
 			mathVecSubtract(facing,POI,me,3);
 			mathVecNormalize(facing,3);
 			api.setAttitudeTarget(facing);
@@ -172,7 +172,7 @@ void loop() {
     	            setPositionTarget(target,2.5);
     	        }
     	        else{
-    	            setPositionTarget(target);
+    	            setPositionTarget(target,1);
     	        }
 		    }
 		    else{
@@ -180,7 +180,7 @@ void loop() {
     	            setPositionTarget(target,4);
     	        }
     	        else{
-    	            setPositionTarget(target);
+    	            setPositionTarget(target,1);
     	        }
 		    }
 		    if(game.alignLine(POIID)){
@@ -273,7 +273,7 @@ void flareAvoid(){
             goodPOI[1] = 1;
             goodPOI[2] = 1;
 	    }
-	    api.setPositionTarget(me);
+	    api.setPositionTarget(me,1);
 		for(int i = 0; i < 3; i++){ 
 		   facing[i] = me[i+3];
 		}
@@ -361,14 +361,21 @@ void mathVecProject(float c[], float a[], float b[], int n) {
     }
 }
 
+/*
+Just change all future occurances of setPositionTarget(target) to setPositionTarget(target,1)
+
+
 void setPositionTarget(float target[3], float multiplier) {
     float temp[3];
     mathVecSubtract(temp,target,me,3);
     for (int i = 0; i < 3; i++) temp[i] = me[i] + temp[i] * multiplier;
-    setPositionTarget(temp);
+    //setPositionTarget(temp);
+	api.setPositionTarget(temp); // Otherwise the tanget calculation becomes insanely messed up and overshoots -- Yeech
 }
 
-void setPositionTarget(float target[3]) {
+*/
+
+void setPositionTarget(float target[3], int multiplier) {
 	api.getMyZRState(me);
 	
 	float myPos[3],meMag;
@@ -380,7 +387,19 @@ void setPositionTarget(float target[3]) {
 	meMag = mathVecMagnitude(myPos,3);
 	
 	if (minDistanceFromOrigin(target) > 0.31) {
-		api.setPositionTarget(target);
+		if ( distance(me, target) < 0.1) { // Save braking distance
+			api.setPositionTarget(target);
+		}
+
+		else { // Or haul ass towards target
+			int temp[3];
+			
+			for (int i = 0 ; i < 3 ; i++) {
+				temp[i] = target[i] multiplier;
+			}
+
+			api.setPositionTarget(temp);
+		}
 	}
 	
 	else if (meMag >= 0.22 && meMag <= 0.32) {
@@ -409,7 +428,8 @@ void setPositionTarget(float target[3]) {
 		mathVecSubtract(path,mePrep,myPos,3);
 		
 		for (int i = 0; i < 3; i++) {
-			path[i] = path[i] * 2;
+			path[i] = path[i] * multiplier; // See here, if you actually want to use multiplier, the multiplier should be put in
+			// the place of the 2, not feeding in a completely new target location. -- Yeech
 		}
 		
 		mathVecAdd(temp,myPos,path,3);
