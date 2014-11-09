@@ -90,7 +90,7 @@ void loop() {
 		case 1: //set target to outer
 		    if(first){
 		        for(int i = 0; i < 3; i++){ 
-    		        target[i] = POI[i]*0.48/mathVecMagnitude(POI,3);
+    		        target[i] = POI[i]*0.55/mathVecMagnitude(POI,3);
     		    }    
 		    }
 		    else{
@@ -112,12 +112,7 @@ void loop() {
 			mathVecNormalize(facing,3);
 			api.setAttitudeTarget(facing);
 		    if(first){
-		        if(distance(me,target)>0.04){
-    	            setPositionTarget(target,3);
-    	        }
-    	        else{
-    	            setPositionTarget(target,1);
-    	        }
+    	            setPositionTarget(target,2.5);
 		    }
 		    else{ // No restriction on speed when taking pic, might as well just leave
     			//if(distance(me,target)>0.05){
@@ -387,18 +382,23 @@ void setPositionTarget(float target[3], float multiplier) {
 	meMag = mathVecMagnitude(myPos,3);
 	
 	if (minDistanceFromOrigin(target) > 0.31) {
-		float temp[3];
-
-		mathVecSubtract(temp,target,me,3);
-			
-		for (int i = 0 ; i < 3 ; i++) {
-			temp[i] = me[i] + temp[i] * multiplier;
+		if (distance(me, target) < 0.1) { // Save braking distance
+			api.setPositionTarget(target);
 		}
 
-		api.setPositionTarget(temp);
+		else { // Or haul ass towards target
+			float temp[3];
 
-		DEBUG(("JUST GO\n"));
+			mathVecSubtract(temp,target,me,3);
+			
+			for (int i = 0 ; i < 3 ; i++) {
+				temp[i] = me[i] + temp[i] * multiplier;
+			}
 
+			api.setPositionTarget(temp);
+		}
+
+		DEBUG(("GOING STRAIGHT\n"));
 	}
 	
 	else if (meMag >= 0.22 && meMag <= 0.32) {
