@@ -119,13 +119,13 @@ void loop() {
     	            setPositionTarget(target,1);
     	        }
 		    }
-		    else{
-    			if(distance(me,target)>0.05){
+		    else{ // No restriction on speed when taking pic, might as well just leave
+    			//if(distance(me,target)>0.05){
     	            setPositionTarget(target,2);
-    	        }
-    	        else{
-    	            setPositionTarget(target,1);
-    	        }
+    	        //}
+    	        //else{
+    	        //    setPositionTarget(target,1);// unnecessary since there is no restriction on speed when taking pic
+    	        //}
 		    }
     		if(game.alignLine(POIID)&&(distance(me,origin)>0.475)){
     		    attempts++;
