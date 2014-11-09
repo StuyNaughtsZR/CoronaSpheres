@@ -45,7 +45,7 @@ void loop() {
 	    for(int i = 0; i < 3; i++){ 
 		        uploadPos[i] = me[i] / mathVecMagnitude(me, 3) * 0.65;
 		}
-		api.setPositionTarget(uploadPos);
+		setPositionTarget(uploadPos,1);
 	}
 	if((api.getTime() % 60 == 0)&&(api.getTime() > 10)){
 	    goodPOI[0] = 1;
@@ -330,12 +330,7 @@ float angleBetween(float pt1[3], float pt2[3]){
     dot = mathVecInner(vectorBetweenS1, vectorBetweenS2, 3);
     return acosf(dot);
 }
-void haulAssTowardTarget(float target[], float scalar) {
-    // makes you go in the direction of target, but scalar times faster
-    float scaledTarget[3];
-    for (int i = 0; i < 3; i++) scaledTarget[i] = me[i] + scalar * (target[i] - me[i]);
-    api.setPositionTarget(scaledTarget);
-}
+
 void dilateValue(float pt1[3], float pt2[3], float dilation , float dst[3]){
     for(int i=0; i < 3; i++){
         dst[i] = dilation * (pt1[i] - pt2[i]) + pt1[i];
@@ -369,7 +364,6 @@ void setPositionTarget(float target[3], float multiplier) {
 }
 
 */
-
 void setPositionTarget(float target[3], float multiplier) {
 	api.getMyZRState(me);
 	
