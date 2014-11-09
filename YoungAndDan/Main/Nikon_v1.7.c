@@ -155,7 +155,7 @@ void loop() {
 		        target[i] = POI[i]*0.38/mathVecMagnitude(POI,3);
 		    }		
 		    target[0] += 0.008;
-		    //setPositionTarget(target,1); <-- Why need this???
+		    setPositionTarget(target,1);
 			mathVecSubtract(facing,POI,me,3);
 			mathVecNormalize(facing,3);
 			api.setAttitudeTarget(facing);
@@ -273,7 +273,7 @@ void flareAvoid(){
             goodPOI[1] = 1;
             goodPOI[2] = 1;
 	    }
-	    api.setPositionTarget(me,1);
+	    api.setPositionTarget(me);
 		for(int i = 0; i < 3; i++){ 
 		   facing[i] = me[i+3];
 		}
@@ -375,7 +375,7 @@ void setPositionTarget(float target[3], float multiplier) {
 
 */
 
-void setPositionTarget(float target[3], int multiplier) {
+void setPositionTarget(float target[3], float multiplier) {
 	api.getMyZRState(me);
 	
 	float myPos[3],meMag;
@@ -387,19 +387,23 @@ void setPositionTarget(float target[3], int multiplier) {
 	meMag = mathVecMagnitude(myPos,3);
 	
 	if (minDistanceFromOrigin(target) > 0.31) {
-		if ( distance(me, target) < 0.1) { // Save braking distance
+		if (distance(me, target) < 0.1) { // Save braking distance
 			api.setPositionTarget(target);
 		}
 
 		else { // Or haul ass towards target
-			int temp[3];
+			float temp[3];
+
+			mathVecSubtract(temp,target,me,3);
 			
 			for (int i = 0 ; i < 3 ; i++) {
-				temp[i] = target[i] multiplier;
+				temp[i] = me[i] + temp[i] * multiplier;
 			}
 
 			api.setPositionTarget(temp);
 		}
+
+		DEBUG(("GOING STRAIGHT\n"));
 	}
 	
 	else if (meMag >= 0.22 && meMag <= 0.32) {
