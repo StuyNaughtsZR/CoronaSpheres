@@ -370,7 +370,7 @@ void setPositionTarget(float target[3], float multiplier) {
 	meMag = mathVecMagnitude(myPos,3);
 	
 	if (minDistanceFromOrigin(target) > 0.31) {
-		if (distance(me, target) < 0.1) { // Save braking distance
+		if (distance(me, target) < 0.4) { // Save braking distance
 			api.setPositionTarget(target);
 		}
 
