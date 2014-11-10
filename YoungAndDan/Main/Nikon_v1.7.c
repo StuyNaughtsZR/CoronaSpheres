@@ -39,19 +39,21 @@ void loop() {
 	picNum = game.getMemoryFilled();
 	DEBUG(("%d picture(s) have been taken\n", picNum));
 	DEBUG(("STATE = %d\n",state));
-	DEBUG(("Attempts = %d\n", attempts));
+	DEBUG(("ARRAY = %d,%d,%d\n",goodPOI[0],goodPOI[1],goodPOI[2]));
 	if(distance(me,origin)<0.32){
 	    DEBUG(("Too Close!"));
 	    for(int i = 0; i < 3; i++){ 
 		        uploadPos[i] = me[i] / mathVecMagnitude(me, 3) * 0.65;
 		}
-		setPositionTarget(uploadPos,1);
+		api.setPositionTarget(uploadPos);
 	}
 	if((api.getTime() % 60 == 0)&&(api.getTime() > 10)){
 	    goodPOI[0] = 1;
         goodPOI[1] = 1;
         goodPOI[2] = 1;
 	    state = 6; //should this be 6???????????????????????????????????????????????????????????????????????????
+	                // I think sometimes you are in middle of taking picture and has pictures in memory
+	    
 	}
 	if (api.getTime() > 226) { 
 	    if(state == 3){ 
@@ -90,7 +92,7 @@ void loop() {
 		case 1: //set target to outer
 		    if(first){
 		        for(int i = 0; i < 3; i++){ 
-    		        target[i] = POI[i]*0.55/mathVecMagnitude(POI,3);
+    		        target[i] = POI[i]*0.50/mathVecMagnitude(POI,3);
     		    }    
 		    }
 		    else{
@@ -112,11 +114,11 @@ void loop() {
 			mathVecNormalize(facing,3);
 			api.setAttitudeTarget(facing);
 		    if(first){
-    	            setPositionTarget(target,2.5);
+		        haulAssTowardTarget(target,4);
 		    }
 		    else{ // No restriction on speed when taking pic, might as well just leave
     			//if(distance(me,target)>0.05){
-    	            setPositionTarget(target,2);
+    	            setPositionTarget(target,3);
     	        //}
     	        //else{
     	        //    setPositionTarget(target,1);// unnecessary since there is no restriction on speed when taking pic
@@ -147,7 +149,7 @@ void loop() {
 			
         case 3: //set target to inner zone
 		    for(int i = 0; i < 3; i++){ 
-		        target[i] = POI[i]*0.38/mathVecMagnitude(POI,3);
+		        target[i] = POI[i]*0.39/mathVecMagnitude(POI,3);
 		    }		
 		    target[0] += 0.008;
 		    setPositionTarget(target,1);
@@ -164,10 +166,10 @@ void loop() {
 			api.setAttitudeTarget(facing);
 		    if(first){
 		        if(distance(me,target)>0.05){
-    	            setPositionTarget(target,2.5);
+    	            setPositionTarget(target,3);
     	        }
     	        else{
-    	            setPositionTarget(target,1);
+    	            setPositionTarget(target,2);
     	        }
 		    }
 		    else{
@@ -175,7 +177,7 @@ void loop() {
     	            setPositionTarget(target,4);
     	        }
     	        else{
-    	            setPositionTarget(target,1);
+    	            setPositionTarget(target,2);
     	        }
 		    }
 		    if(game.alignLine(POIID)){
@@ -212,7 +214,7 @@ void loop() {
                     api.setPositionTarget(uploadPos);
                 }
                 else{
-                    setPositionTarget(uploadPos, 8);
+                    haulAssTowardTarget(uploadPos,4);
                 }
             if(picNum == 0){
                 DEBUG(("LOOKING FOR POI"));
@@ -330,7 +332,12 @@ float angleBetween(float pt1[3], float pt2[3]){
     dot = mathVecInner(vectorBetweenS1, vectorBetweenS2, 3);
     return acosf(dot);
 }
-
+void haulAssTowardTarget(float target[], float scalar) {
+    // makes you go in the direction of target, but scalar times faster
+    float scaledTarget[3];
+    for (int i = 0; i < 3; i++) scaledTarget[i] = me[i] + scalar * (target[i] - me[i]);
+    api.setPositionTarget(scaledTarget);
+}
 void dilateValue(float pt1[3], float pt2[3], float dilation , float dst[3]){
     for(int i=0; i < 3; i++){
         dst[i] = dilation * (pt1[i] - pt2[i]) + pt1[i];
@@ -351,19 +358,6 @@ void mathVecProject(float c[], float a[], float b[], int n) {
     }
 }
 
-/*
-Just change all future occurances of setPositionTarget(target) to setPositionTarget(target,1)
-
-
-void setPositionTarget(float target[3], float multiplier) {
-    float temp[3];
-    mathVecSubtract(temp,target,me,3);
-    for (int i = 0; i < 3; i++) temp[i] = me[i] + temp[i] * multiplier;
-    //setPositionTarget(temp);
-	api.setPositionTarget(temp); // Otherwise the tanget calculation becomes insanely messed up and overshoots -- Yeech
-}
-
-*/
 void setPositionTarget(float target[3], float multiplier) {
 	api.getMyZRState(me);
 	
