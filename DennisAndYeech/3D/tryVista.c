@@ -117,7 +117,7 @@ void loop() {
 		case 3: // Moving to outer zone
 
 			
-			if (AreWeThereYet(newBrakingPos,0.1,0.1)) state = 4;
+			if (AreWeThereYet(newBrakingPos,0.15,0.15)) state = 4;
 			
 			else {
 			    api.setPositionTarget(newBrakingPos);
